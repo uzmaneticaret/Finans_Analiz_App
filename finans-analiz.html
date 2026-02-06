@@ -654,6 +654,137 @@
             animation: flashGreen .6s ease-out
         }
 
+        .signal-badge-card {
+            display: inline-block;
+            padding: 3px 10px;
+            border-radius: 6px;
+            font-size: .78em;
+            font-weight: 700;
+            margin-top: 6px;
+            letter-spacing: .5px
+        }
+
+        .signal-badge-card.strong-buy {
+            background: rgba(0, 224, 112, .15);
+            color: #00e070;
+            border: 1px solid rgba(0, 224, 112, .3)
+        }
+
+        .signal-badge-card.buy {
+            background: rgba(0, 180, 90, .1);
+            color: #00cc66;
+            border: 1px solid rgba(0, 180, 90, .2)
+        }
+
+        .signal-badge-card.neutral {
+            background: rgba(120, 120, 180, .1);
+            color: #9999cc;
+            border: 1px solid rgba(120, 120, 180, .2)
+        }
+
+        .signal-badge-card.sell {
+            background: rgba(255, 80, 80, .1);
+            color: #ff6666;
+            border: 1px solid rgba(255, 80, 80, .2)
+        }
+
+        .signal-badge-card.strong-sell {
+            background: rgba(255, 50, 50, .15);
+            color: #ff5050;
+            border: 1px solid rgba(255, 50, 50, .3)
+        }
+
+        .signal-summary {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            padding: 20px;
+            margin-bottom: 15px;
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+            gap: 12px;
+            text-align: center
+        }
+
+        .signal-item {
+            padding: 10px;
+            border-radius: 10px;
+            background: rgba(255, 255, 255, .02)
+        }
+
+        .signal-item .sig-name {
+            font-size: .75em;
+            color: var(--dim);
+            margin-bottom: 4px;
+            text-transform: uppercase;
+            letter-spacing: .5px
+        }
+
+        .signal-item .sig-val {
+            font-size: 1em;
+            font-weight: 700
+        }
+
+        .signal-item .sig-val.buy {
+            color: var(--green)
+        }
+
+        .signal-item .sig-val.sell {
+            color: var(--red)
+        }
+
+        .signal-item .sig-val.neutral {
+            color: var(--dim)
+        }
+
+        .overall-signal {
+            grid-column: 1 / -1;
+            padding: 15px;
+            border-radius: 12px;
+            text-align: center;
+            font-size: 1.3em;
+            font-weight: 800;
+            letter-spacing: 1px
+        }
+
+        .overall-signal.buy {
+            background: linear-gradient(135deg, rgba(0, 224, 112, .1), rgba(0, 224, 112, .02));
+            color: var(--green);
+            border: 1px solid rgba(0, 224, 112, .25)
+        }
+
+        .overall-signal.sell {
+            background: linear-gradient(135deg, rgba(255, 80, 80, .1), rgba(255, 80, 80, .02));
+            color: var(--red);
+            border: 1px solid rgba(255, 80, 80, .25)
+        }
+
+        .overall-signal.neutral {
+            background: linear-gradient(135deg, rgba(120, 120, 180, .1), rgba(120, 120, 180, .02));
+            color: var(--dim);
+            border: 1px solid rgba(120, 120, 180, .25)
+        }
+
+        .signal-meter {
+            width: 100%;
+            height: 8px;
+            background: linear-gradient(90deg, var(--red), var(--red) 30%, #ffc800 45%, #ffc800 55%, var(--green) 70%, var(--green));
+            border-radius: 4px;
+            position: relative;
+            margin: 10px 0 5px
+        }
+
+        .signal-meter .meter-needle {
+            position: absolute;
+            top: -4px;
+            width: 4px;
+            height: 16px;
+            background: white;
+            border-radius: 2px;
+            transform: translateX(-50%);
+            box-shadow: 0 0 6px rgba(255, 255, 255, .5)
+        }
+
         @keyframes flashGreen {
             0% {
                 box-shadow: 0 0 15px rgba(0, 224, 112, .4);
@@ -739,6 +870,14 @@
                     <div class="chart-wrapper sub">
                         <canvas id="macdChart"></canvas>
                     </div>
+                </div>
+            </div>
+
+            <div class="chart-section" style="margin-top:15px">
+                <h3>🟢🔴 Al / Sat Sinyal Grafiği</h3>
+                <div id="signalSummary" class="signal-summary"></div>
+                <div class="chart-wrapper main">
+                    <canvas id="signalChart"></canvas>
                 </div>
             </div>
 
@@ -1145,6 +1284,146 @@
         }
 
         // ═══════════════════════════════════════════════════
+        // BUY/SELL SIGNAL ENGINE
+        // ═══════════════════════════════════════════════════
+        function generateSignals(closes, timestamps, sma20, sma50, rsi, macd, bb) {
+            const signals = [];
+            const details = { rsi: 'Nötr', macd: 'Nötr', sma: 'Nötr', bb: 'Nötr', trend: 'Nötr', volume: 'Nötr' };
+            let score = 0; // -100 to +100
+
+            for (let i = 1; i < closes.length; i++) {
+                let sig = null;
+
+                // RSI sinyalleri
+                if (rsi[i] !== null && rsi[i - 1] !== null) {
+                    if (rsi[i - 1] < 30 && rsi[i] >= 30) {
+                        sig = { t: timestamps[i], price: closes[i], type: 'buy', reason: 'RSI aşırı satımdan çıkış (30 üstü)' };
+                    } else if (rsi[i - 1] > 70 && rsi[i] <= 70) {
+                        sig = { t: timestamps[i], price: closes[i], type: 'sell', reason: 'RSI aşırı alımdan düşüş (70 altı)' };
+                    }
+                }
+
+                // MACD crossover sinyalleri
+                if (macd.macd[i] !== undefined && macd.signal[i] !== undefined && i > 0) {
+                    const prevDiff = macd.macd[i - 1] - macd.signal[i - 1];
+                    const currDiff = macd.macd[i] - macd.signal[i];
+                    if (prevDiff <= 0 && currDiff > 0) {
+                        sig = { t: timestamps[i], price: closes[i], type: 'buy', reason: 'MACD yukarı kesişim (Golden Cross)' };
+                    } else if (prevDiff >= 0 && currDiff < 0) {
+                        sig = { t: timestamps[i], price: closes[i], type: 'sell', reason: 'MACD aşağı kesişim (Death Cross)' };
+                    }
+                }
+
+                // SMA crossover (20/50)
+                if (sma20[i] !== null && sma50[i] !== null && sma20[i - 1] !== null && sma50[i - 1] !== null) {
+                    if (sma20[i - 1] <= sma50[i - 1] && sma20[i] > sma50[i]) {
+                        sig = { t: timestamps[i], price: closes[i], type: 'buy', reason: 'SMA 20/50 Altın Kesişim (Golden Cross)' };
+                    } else if (sma20[i - 1] >= sma50[i - 1] && sma20[i] < sma50[i]) {
+                        sig = { t: timestamps[i], price: closes[i], type: 'sell', reason: 'SMA 20/50 Ölüm Kesişimi (Death Cross)' };
+                    }
+                }
+
+                // Bollinger Band sinyalleri
+                if (bb.lower[i] !== null && bb.upper[i] !== null) {
+                    if (closes[i - 1] <= bb.lower[i - 1] && closes[i] > bb.lower[i]) {
+                        sig = { t: timestamps[i], price: closes[i], type: 'buy', reason: 'Fiyat Bollinger alt bandından yukarı kırıldı' };
+                    } else if (closes[i - 1] >= bb.upper[i - 1] && closes[i] < bb.upper[i]) {
+                        sig = { t: timestamps[i], price: closes[i], type: 'sell', reason: 'Fiyat Bollinger üst bandından aşağı kırıldı' };
+                    }
+                }
+
+                if (sig) signals.push(sig);
+            }
+
+            // Son değerlere göre skor hesapla
+            const lastIdx = closes.length - 1;
+            const lastRsi = rsi.filter(v => v !== null).pop() || 50;
+            const lastMacdVal = macd.macd[lastIdx];
+            const lastSignalVal = macd.signal[lastIdx];
+            const lastSma20 = sma20.filter(v => v !== null).pop();
+            const lastSma50 = sma50.filter(v => v !== null).pop();
+            const lastBBU = bb.upper.filter(v => v !== null).pop();
+            const lastBBL = bb.lower.filter(v => v !== null).pop();
+            const lastBBM = bb.middle.filter(v => v !== null).pop();
+            const lastClose = closes[lastIdx];
+
+            // RSI skoru (-20 to +20)
+            if (lastRsi < 25) { score += 20; details.rsi = 'Güçlü Al'; }
+            else if (lastRsi < 35) { score += 12; details.rsi = 'Al'; }
+            else if (lastRsi < 45) { score += 5; details.rsi = 'Hafif Al'; }
+            else if (lastRsi > 75) { score -= 20; details.rsi = 'Güçlü Sat'; }
+            else if (lastRsi > 65) { score -= 12; details.rsi = 'Sat'; }
+            else if (lastRsi > 55) { score -= 5; details.rsi = 'Hafif Sat'; }
+            else { details.rsi = 'Nötr'; }
+
+            // MACD skoru (-20 to +20)
+            if (lastMacdVal > lastSignalVal) {
+                const strength = Math.abs(lastMacdVal - lastSignalVal) / lastClose * 10000;
+                if (strength > 5) { score += 20; details.macd = 'Güçlü Al'; }
+                else { score += 10; details.macd = 'Al'; }
+            } else {
+                const strength = Math.abs(lastMacdVal - lastSignalVal) / lastClose * 10000;
+                if (strength > 5) { score -= 20; details.macd = 'Güçlü Sat'; }
+                else { score -= 10; details.macd = 'Sat'; }
+            }
+
+            // SMA skoru (-20 to +20)
+            if (lastClose > lastSma20 && lastSma20 > lastSma50) { score += 20; details.sma = 'Güçlü Al'; }
+            else if (lastClose > lastSma20) { score += 10; details.sma = 'Al'; }
+            else if (lastClose < lastSma20 && lastSma20 < lastSma50) { score -= 20; details.sma = 'Güçlü Sat'; }
+            else if (lastClose < lastSma20) { score -= 10; details.sma = 'Sat'; }
+
+            // BB skoru (-20 to +20)
+            const bbPct = (lastClose - lastBBL) / (lastBBU - lastBBL);
+            if (bbPct < 0.1) { score += 15; details.bb = 'Güçlü Al'; }
+            else if (bbPct < 0.3) { score += 8; details.bb = 'Al'; }
+            else if (bbPct > 0.9) { score -= 15; details.bb = 'Güçlü Sat'; }
+            else if (bbPct > 0.7) { score -= 8; details.bb = 'Sat'; }
+            else { details.bb = 'Nötr'; }
+
+            // Trend skoru (-20 to +20)
+            const trendPct = (closes[lastIdx] - closes[Math.max(0, lastIdx - 20)]) / closes[Math.max(0, lastIdx - 20)] * 100;
+            if (trendPct > 5) { score += 15; details.trend = 'Güçlü Al'; }
+            else if (trendPct > 1) { score += 8; details.trend = 'Al'; }
+            else if (trendPct < -5) { score -= 15; details.trend = 'Güçlü Sat'; }
+            else if (trendPct < -1) { score -= 8; details.trend = 'Sat'; }
+            else { details.trend = 'Nötr'; }
+
+            // Normalize to -100 to +100
+            score = Math.max(-100, Math.min(100, score));
+
+            let overall, overallClass;
+            if (score >= 40) { overall = '🟢 GÜÇLÜ AL'; overallClass = 'buy'; }
+            else if (score >= 15) { overall = '🟢 AL'; overallClass = 'buy'; }
+            else if (score > -15) { overall = '⚪ NÖTR'; overallClass = 'neutral'; }
+            else if (score > -40) { overall = '🔴 SAT'; overallClass = 'sell'; }
+            else { overall = '🔴 GÜÇLÜ SAT'; overallClass = 'sell'; }
+
+            return { signals, score, overall, overallClass, details };
+        }
+
+        // Quick signal for dashboard cards
+        function getQuickSignal(assetId) {
+            const hist = state.history[assetId];
+            if (!hist || hist.length < 30) return null;
+            let closes = hist.map(h => h.c);
+            if (closes.length > 200) {
+                const step = Math.ceil(closes.length / 150);
+                const nc = [];
+                for (let i = 0; i < closes.length; i += step) nc.push(closes[i]);
+                if (nc[nc.length - 1] !== closes[closes.length - 1]) nc.push(closes[closes.length - 1]);
+                closes = nc;
+            }
+            const sma20 = SMA(closes, Math.min(20, Math.floor(closes.length * 0.3)));
+            const sma50 = SMA(closes, Math.min(50, Math.floor(closes.length * 0.5)));
+            const rsi = RSI(closes, 14);
+            const macdData = MACD(closes, 12, 26, 9);
+            const bb = BollingerBands(closes, Math.min(20, Math.floor(closes.length * 0.3)), 2);
+            const result = generateSignals(closes, hist.map(h => h.t), sma20, sma50, rsi, macdData, bb);
+            return result;
+        }
+
+        // ═══════════════════════════════════════════════════
         // FORMAT HELPERS
         // ═══════════════════════════════════════════════════
         function fmt(val, asset) {
@@ -1177,12 +1456,26 @@
                 const chg = p ? p.change24h : null;
                 const chgClass = chg >= 0 ? 'up' : 'down';
                 const chgText = chg !== null && chg !== 0 ? fmtPct(chg) : '';
+
+                // Quick signal badge
+                let signalHtml = '';
+                const sig = getQuickSignal(asset.id);
+                if (sig) {
+                    let badgeClass = 'neutral';
+                    if (sig.score >= 40) badgeClass = 'strong-buy';
+                    else if (sig.score >= 15) badgeClass = 'buy';
+                    else if (sig.score <= -40) badgeClass = 'strong-sell';
+                    else if (sig.score <= -15) badgeClass = 'sell';
+                    signalHtml = `<div class="signal-badge-card ${badgeClass}">${sig.overall}</div>`;
+                }
+
                 card.innerHTML = `
             <div class="icon">${asset.icon}</div>
             <div class="name">${asset.name}</div>
             <div class="price">${price}</div>
             ${chgText ? `<div class="change ${chgClass}">${chgText} (24s)</div>` : '<div class="unit" style="height:20px"></div>'}
             <div class="unit">${asset.unit}</div>
+            ${signalHtml}
         `;
                 grid.appendChild(card);
             });
@@ -1279,6 +1572,11 @@
             renderRSIChart(timestamps, rsi);
             renderMACDChart(timestamps, macd);
 
+            // Generate & render buy/sell signal chart
+            const signalData = generateSignals(closes, timestamps, sma20, sma50, rsi, macd, bb);
+            renderSignalChart(asset, timestamps, closes, signalData);
+            renderSignalSummary(asset, signalData);
+
             // Fibonacci table
             renderFibTable(asset, fib, lastClose);
 
@@ -1315,7 +1613,7 @@
         // CHARTS
         // ═══════════════════════════════════════════════════
         function destroyCharts() {
-            ['priceChart', 'rsiChart', 'macdChart'].forEach(id => { if (state.charts[id]) { state.charts[id].destroy(); delete state.charts[id]; } });
+            ['priceChart', 'rsiChart', 'macdChart', 'signalChart'].forEach(id => { if (state.charts[id]) { state.charts[id].destroy(); delete state.charts[id]; } });
         }
 
         function renderPriceChart(asset, timestamps, closes, sma20, sma50, sma200, bb, fib, trend) {
@@ -1433,6 +1731,163 @@
                     }
                 }
             });
+        }
+
+        // ═══════════════════════════════════════════════════
+        // BUY/SELL SIGNAL CHART
+        // ═══════════════════════════════════════════════════
+        function renderSignalChart(asset, timestamps, closes, signalData) {
+            if (state.charts.signalChart) state.charts.signalChart.destroy();
+            const ctx = document.getElementById('signalChart').getContext('2d');
+            const labels = timestamps.map(t => new Date(t));
+
+            // Fiyat verisinin üzerinde al/sat noktaları
+            const buyPoints = new Array(closes.length).fill(null);
+            const sellPoints = new Array(closes.length).fill(null);
+
+            signalData.signals.forEach(sig => {
+                // En yakın timestamp'i bul
+                let minDist = Infinity, minIdx = 0;
+                timestamps.forEach((t, idx) => {
+                    const dist = Math.abs(t - sig.t);
+                    if (dist < minDist) { minDist = dist; minIdx = idx; }
+                });
+                if (sig.type === 'buy') buyPoints[minIdx] = closes[minIdx];
+                else sellPoints[minIdx] = closes[minIdx];
+            });
+
+            state.charts.signalChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels,
+                    datasets: [
+                        {
+                            label: 'Fiyat',
+                            data: closes,
+                            borderColor: '#8888bb',
+                            backgroundColor: 'rgba(136,136,187,0.03)',
+                            borderWidth: 1.5,
+                            pointRadius: 0,
+                            fill: true,
+                            order: 3
+                        },
+                        {
+                            label: '🟢 AL Sinyali',
+                            data: buyPoints,
+                            borderColor: 'transparent',
+                            backgroundColor: '#00e070',
+                            pointRadius: 10,
+                            pointHoverRadius: 14,
+                            pointStyle: 'triangle',
+                            showLine: false,
+                            order: 1
+                        },
+                        {
+                            label: '🔴 SAT Sinyali',
+                            data: sellPoints,
+                            borderColor: 'transparent',
+                            backgroundColor: '#ff5050',
+                            pointRadius: 10,
+                            pointHoverRadius: 14,
+                            pointStyle: 'triangle',
+                            pointRotation: 180,
+                            showLine: false,
+                            order: 1
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    interaction: { mode: 'index', intersect: false },
+                    plugins: {
+                        legend: {
+                            position: 'top',
+                            labels: { color: '#8888bb', font: { size: 11 }, usePointStyle: true }
+                        },
+                        tooltip: {
+                            backgroundColor: 'rgba(15,15,50,0.95)',
+                            titleColor: '#ffd700',
+                            bodyColor: '#ccc',
+                            borderColor: '#333',
+                            borderWidth: 1,
+                            callbacks: {
+                                label: function (ctx2) {
+                                    if (ctx2.raw === null) return null;
+                                    const label = ctx2.dataset.label;
+                                    const val = fmt(ctx2.raw, asset);
+                                    // Sinyal sebebini bul
+                                    if (label.includes('AL') || label.includes('SAT')) {
+                                        const sigType = label.includes('AL') ? 'buy' : 'sell';
+                                        const sig = signalData.signals.find(s => {
+                                            let minDist = Infinity, minIdx = 0;
+                                            timestamps.forEach((t, idx) => { const dist = Math.abs(t - s.t); if (dist < minDist) { minDist = dist; minIdx = idx; } });
+                                            return minIdx === ctx2.dataIndex && s.type === sigType;
+                                        });
+                                        return `${label}: ${val}${sig ? ' — ' + sig.reason : ''}`;
+                                    }
+                                    return `${label}: ${val}`;
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            type: 'time',
+                            time: { unit: state.days <= 30 ? 'day' : state.days <= 180 ? 'week' : 'month' },
+                            ticks: { color: '#666', maxTicksLimit: 12 },
+                            grid: { color: '#1a1a4a' }
+                        },
+                        y: {
+                            ticks: { color: '#666', callback: v => fmt(v, asset) },
+                            grid: { color: '#1a1a4a' }
+                        }
+                    }
+                }
+            });
+        }
+
+        function renderSignalSummary(asset, signalData) {
+            const d = signalData.details;
+            const score = signalData.score;
+            const meterPos = ((score + 100) / 200) * 100; // 0-100%
+
+            function sigClass(val) {
+                if (val.includes('Güçlü Al')) return 'buy';
+                if (val.includes('Al')) return 'buy';
+                if (val.includes('Güçlü Sat')) return 'sell';
+                if (val.includes('Sat')) return 'sell';
+                return 'neutral';
+            }
+
+            const recentSignals = signalData.signals.slice(-5).reverse();
+            let recentHtml = '';
+            if (recentSignals.length > 0) {
+                recentHtml = '<div style="grid-column:1/-1;text-align:left;margin-top:5px">';
+                recentHtml += '<div style="font-size:.75em;color:var(--dim);margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px">Son Sinyaller</div>';
+                recentSignals.forEach(s => {
+                    const icon = s.type === 'buy' ? '🟢' : '🔴';
+                    const color = s.type === 'buy' ? 'var(--green)' : 'var(--red)';
+                    const date = new Date(s.t).toLocaleDateString('tr-TR', { day: 'numeric', month: 'short' });
+                    recentHtml += `<div style="font-size:.82em;margin:3px 0;color:${color}">${icon} ${date} — ${fmt(s.price, asset)} — ${s.reason}</div>`;
+                });
+                recentHtml += '</div>';
+            }
+
+            document.getElementById('signalSummary').innerHTML = `
+                <div class="overall-signal ${signalData.overallClass}">
+                    ${signalData.overall}
+                    <div style="font-size:.45em;margin-top:4px;opacity:.7">Skor: ${score > 0 ? '+' : ''}${score}/100</div>
+                    <div class="signal-meter"><div class="meter-needle" style="left:${meterPos}%"></div></div>
+                    <div style="display:flex;justify-content:space-between;font-size:.35em;opacity:.5"><span>Güçlü Sat</span><span>Nötr</span><span>Güçlü Al</span></div>
+                </div>
+                <div class="signal-item"><div class="sig-name">RSI (14)</div><div class="sig-val ${sigClass(d.rsi)}">${d.rsi}</div></div>
+                <div class="signal-item"><div class="sig-name">MACD</div><div class="sig-val ${sigClass(d.macd)}">${d.macd}</div></div>
+                <div class="signal-item"><div class="sig-name">SMA 20/50</div><div class="sig-val ${sigClass(d.sma)}">${d.sma}</div></div>
+                <div class="signal-item"><div class="sig-name">Bollinger</div><div class="sig-val ${sigClass(d.bb)}">${d.bb}</div></div>
+                <div class="signal-item"><div class="sig-name">Trend</div><div class="sig-val ${sigClass(d.trend)}">${d.trend}</div></div>
+                ${recentHtml}
+            `;
         }
 
         // ═══════════════════════════════════════════════════
@@ -1752,6 +2207,14 @@
             renderDashboard(); // Show shells immediately
             await refreshPrices();
             startCountdown();
+
+            // Arka planda tüm varlıklar için kısa history çek (dashboard sinyalleri için)
+            logApi('system', true, 'Dashboard sinyalleri yükleniyor...');
+            const historyPromises = ASSETS.map(asset => fetchHistory(asset, 90));
+            await Promise.allSettled(historyPromises);
+            renderDashboard(); // Re-render with signal badges
+            logApi('system', true, 'Dashboard sinyalleri hazır.');
+
             logApi('system', true, `Başlatıldı. Protokol: ${location.protocol}`);
             if (location.protocol === 'file:') {
                 logApi('system', false, 'file:// protokolü — API çağrıları CORS nedeniyle engelleniyor! Live Server kullanın.');
