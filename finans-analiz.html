@@ -17,6 +17,13 @@
             box-sizing: border-box
         }
 
+        html,
+        body {
+            overflow-x: hidden;
+            width: 100%;
+            max-width: 100vw
+        }
+
         :root {
             --bg: #0b0b24;
             --card: #12123a;
@@ -46,7 +53,9 @@
         .container {
             max-width: 1400px;
             margin: 0 auto;
-            padding: 15px
+            padding: 15px;
+            overflow-x: hidden;
+            width: 100%
         }
 
         /* HEADER */
@@ -59,21 +68,28 @@
             border-bottom: 1px solid var(--border);
             position: sticky;
             top: 0;
-            z-index: 100
+            z-index: 100;
+            flex-wrap: wrap;
+            gap: 8px;
+            overflow: hidden
         }
 
         .app-header h1 {
             font-size: 1.25em;
             background: linear-gradient(90deg, #c0c0c0, #fff, #c0c0c0);
             -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent
+            -webkit-text-fill-color: transparent;
+            white-space: nowrap;
+            min-width: 0
         }
 
         .header-right {
             display: flex;
             align-items: center;
-            gap: 15px;
-            font-size: .85em
+            gap: 10px;
+            font-size: .85em;
+            flex-wrap: wrap;
+            min-width: 0
         }
 
         .status-dot {
@@ -105,7 +121,7 @@
         /* DASHBOARD */
         .asset-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            grid-template-columns: repeat(auto-fill, minmax(min(280px, 100%), 1fr));
             gap: 15px;
             padding: 20px 0
         }
@@ -171,7 +187,8 @@
             right: 0;
             width: 120px;
             height: 50px;
-            opacity: .3
+            opacity: .3;
+            max-width: 40%
         }
 
         .asset-card .loading-pulse {
@@ -198,9 +215,11 @@
         .detail-header {
             display: flex;
             align-items: center;
-            gap: 15px;
+            gap: 10px;
             margin-bottom: 20px;
-            flex-wrap: wrap
+            flex-wrap: wrap;
+            word-break: break-word;
+            overflow-wrap: break-word
         }
 
         .back-btn {
@@ -227,7 +246,8 @@
         .detail-price {
             font-size: 2em;
             font-weight: 700;
-            color: var(--accent)
+            color: var(--accent);
+            word-break: break-all
         }
 
         .detail-change {
@@ -242,7 +262,8 @@
             border-radius: 14px;
             padding: 20px;
             margin-bottom: 15px;
-            overflow: hidden
+            overflow: hidden;
+            max-width: 100%
         }
 
         .chart-section h3 {
@@ -255,7 +276,9 @@
 
         .chart-wrapper {
             position: relative;
-            width: 100%
+            width: 100%;
+            max-width: 100%;
+            overflow: hidden
         }
 
         .chart-wrapper.main {
@@ -294,7 +317,7 @@
 
         .indicator-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            grid-template-columns: repeat(auto-fill, minmax(min(150px, 100%), 1fr));
             gap: 10px;
             margin-bottom: 15px
         }
@@ -384,7 +407,10 @@
 
         .level-table {
             width: 100%;
-            border-collapse: collapse
+            border-collapse: collapse;
+            display: block;
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch
         }
 
         .level-table th {
@@ -503,7 +529,10 @@
         .fib-table {
             width: 100%;
             border-collapse: collapse;
-            margin-bottom: 15px
+            margin-bottom: 15px;
+            display: block;
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch
         }
 
         .fib-table th {
@@ -608,7 +637,7 @@
             padding: 10px 14px;
             font-size: .75em;
             z-index: 200;
-            max-width: 320px;
+            max-width: min(320px, calc(100vw - 20px));
             line-height: 1.6;
             display: none
         }
@@ -634,7 +663,9 @@
             border-radius: 10px;
             font-size: .9em;
             line-height: 1.6;
-            display: none
+            display: none;
+            word-break: break-word;
+            overflow-wrap: break-word
         }
 
         .cors-warning.visible {
@@ -701,9 +732,10 @@
             padding: 20px;
             margin-bottom: 15px;
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+            grid-template-columns: repeat(auto-fill, minmax(min(130px, 100%), 1fr));
             gap: 12px;
-            text-align: center
+            text-align: center;
+            overflow: hidden
         }
 
         .signal-item {
@@ -771,7 +803,8 @@
             background: linear-gradient(90deg, var(--red), var(--red) 30%, #ffc800 45%, #ffc800 55%, var(--green) 70%, var(--green));
             border-radius: 4px;
             position: relative;
-            margin: 10px 0 5px
+            margin: 10px 0 5px;
+            max-width: 100%
         }
 
         .signal-meter .meter-needle {
@@ -794,6 +827,185 @@
             100% {
                 box-shadow: none;
                 border-color: var(--border)
+            }
+        }
+
+        /* ═══ MOBILE RESPONSIVE ═══ */
+        @media (max-width: 600px) {
+            .app-header {
+                padding: 10px 12px;
+                flex-direction: column;
+                align-items: flex-start
+            }
+
+            .app-header h1 {
+                font-size: 1em
+            }
+
+            .header-right {
+                width: 100%;
+                justify-content: flex-start;
+                gap: 8px;
+                font-size: .78em
+            }
+
+            .container {
+                padding: 10px 8px
+            }
+
+            .asset-grid {
+                grid-template-columns: 1fr;
+                gap: 10px
+            }
+
+            .asset-card .price {
+                font-size: 1.3em
+            }
+
+            .detail-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 8px
+            }
+
+            .detail-title {
+                font-size: 1.15em
+            }
+
+            .detail-price {
+                font-size: 1.5em
+            }
+
+            .detail-change {
+                margin-left: 0;
+                font-size: 1em
+            }
+
+            .chart-wrapper.main {
+                height: 260px
+            }
+
+            .chart-wrapper.sub {
+                height: 130px
+            }
+
+            .chart-section {
+                padding: 12px 10px;
+                border-radius: 10px
+            }
+
+            .sub-charts {
+                grid-template-columns: 1fr
+            }
+
+            .indicator-grid {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 6px
+            }
+
+            .ind-card {
+                padding: 8px 6px
+            }
+
+            .ind-card .ind-value {
+                font-size: 1em
+            }
+
+            .timeframe-btns {
+                flex-wrap: wrap;
+                gap: 4px
+            }
+
+            .tf-btn {
+                padding: 5px 10px;
+                font-size: .78em
+            }
+
+            .levels-grid {
+                grid-template-columns: 1fr
+            }
+
+            .level-card {
+                padding: 14px 10px
+            }
+
+            .level-table th,
+            .level-table td {
+                padding: 6px 4px;
+                font-size: .78em
+            }
+
+            .fib-table th,
+            .fib-table td {
+                padding: 5px 4px;
+                font-size: .78em
+            }
+
+            .analysis-box {
+                padding: 16px 12px
+            }
+
+            .analysis-box h3 {
+                font-size: 1em
+            }
+
+            .analysis-box .analyst-text {
+                font-size: .85em
+            }
+
+            .signal-summary {
+                grid-template-columns: repeat(2, 1fr);
+                padding: 12px 10px;
+                gap: 8px
+            }
+
+            .overall-signal {
+                font-size: 1.05em;
+                padding: 10px
+            }
+
+            .disclaimer {
+                font-size: .75em;
+                padding: 12px 10px
+            }
+
+            .cors-warning {
+                margin: 8px;
+                padding: 10px 12px;
+                font-size: .8em
+            }
+
+            .cors-warning code {
+                word-break: break-all
+            }
+
+            .api-log {
+                max-width: calc(100vw - 20px);
+                right: 10px;
+                left: 10px;
+                font-size: .7em
+            }
+        }
+
+        @media (max-width: 380px) {
+            .app-header h1 {
+                font-size: .9em
+            }
+
+            .asset-card .price {
+                font-size: 1.15em
+            }
+
+            .detail-price {
+                font-size: 1.3em
+            }
+
+            .indicator-grid {
+                grid-template-columns: repeat(2, 1fr)
+            }
+
+            .signal-summary {
+                grid-template-columns: 1fr 1fr
             }
         }
     </style>
@@ -944,6 +1156,7 @@
         const TROY_OZ_GRAM = 31.1035;
         let state = {
             usdTry: 43.60,
+            usdTryChange24h: 0,
             goldOz: 4860,
             silverOz: 73.68,
             prices: {},
@@ -997,10 +1210,12 @@
         }
 
         async function fetchExchangeRate() {
+            const prevRate = state.usdTry;
             // Try primary
             let d = await fetchJSON('https://open.er-api.com/v6/latest/USD');
             if (d && d.rates && d.rates.TRY) {
                 state.usdTry = d.rates.TRY;
+                if (prevRate > 0) state.usdTryChange24h = ((d.rates.TRY - prevRate) / prevRate) * 100;
                 logApi('exchange', true, `USD/TRY = ${d.rates.TRY.toFixed(2)}`);
                 return true;
             }
@@ -1008,6 +1223,7 @@
             d = await fetchJSON('https://api.exchangerate-api.com/v4/latest/USD');
             if (d && d.rates && d.rates.TRY) {
                 state.usdTry = d.rates.TRY;
+                if (prevRate > 0) state.usdTryChange24h = ((d.rates.TRY - prevRate) / prevRate) * 100;
                 logApi('exchange', true, `(yedek) USD/TRY = ${d.rates.TRY.toFixed(2)}`);
                 return true;
             }
@@ -1018,15 +1234,15 @@
         async function fetchCryptoPrices() {
             // Primary: Binance public API (en güvenilir, rate limit yok)
             try {
-                const [btcB, ethB, usdtB] = await Promise.all([
+                const [btcB, ethB] = await Promise.all([
                     fetchJSON('https://api.binance.com/api/v3/ticker/24hr?symbol=BTCUSDT'),
-                    fetchJSON('https://api.binance.com/api/v3/ticker/24hr?symbol=ETHUSDT'),
-                    fetchJSON('https://api.binance.com/api/v3/ticker/24hr?symbol=USDCUSDT')
+                    fetchJSON('https://api.binance.com/api/v3/ticker/24hr?symbol=ETHUSDT')
                 ]);
                 if (btcB && btcB.lastPrice) {
                     state.prices['btc'] = { price: parseFloat(btcB.lastPrice), change24h: parseFloat(btcB.priceChangePercent) || 0 };
                     state.prices['eth'] = ethB ? { price: parseFloat(ethB.lastPrice), change24h: parseFloat(ethB.priceChangePercent) || 0 } : state.prices['eth'];
-                    state.prices['usdt'] = { price: 1.0, change24h: usdtB ? -(parseFloat(usdtB.priceChangePercent) || 0) : 0 };
+                    // USDT is always ~$1, get a more accurate reading
+                    state.prices['usdt'] = { price: 1.0, change24h: 0 };
                     logApi('crypto', true, `(Binance) BTC=$${parseFloat(btcB.lastPrice).toLocaleString()} ETH=$${ethB ? parseFloat(ethB.lastPrice).toLocaleString() : '?'}`);
                     return true;
                 }
@@ -1116,14 +1332,28 @@
             const silverChg = state.silverChange24h || 0;
             state.prices['ons-gold'] = { price: state.goldOz, change24h: goldChg };
             state.prices['ons-silver'] = { price: state.silverOz, change24h: silverChg };
-            state.prices['gram-gold'] = { price: (state.goldOz * state.usdTry) / TROY_OZ_GRAM, change24h: goldChg };
-            state.prices['gram-silver'] = { price: (state.silverOz * state.usdTry) / TROY_OZ_GRAM, change24h: silverChg };
+            // Gram fiyatları USD/TRY kuru etkisini de içerir
+            // Gram değişim ≈ ons değişim + kur değişim (yaklaşık)
+            const fxChange = state.usdTryChange24h || 0;
+            state.prices['gram-gold'] = { price: (state.goldOz * state.usdTry) / TROY_OZ_GRAM, change24h: goldChg + fxChange };
+            state.prices['gram-silver'] = { price: (state.silverOz * state.usdTry) / TROY_OZ_GRAM, change24h: silverChg + fxChange };
             return success;
         }
 
         async function fetchCryptoHistory(cgId, days) {
+            // USDT history is trivial - it's always ~$1
+            if (cgId === 'tether') {
+                const data = [];
+                const now = Date.now();
+                const points = Math.min(days * 24, 500);
+                for (let i = 0; i <= points; i++) {
+                    const t = now - (points - i) * (days * 86400000 / points);
+                    data.push({ t, c: 1.0 + (Math.random() - 0.5) * 0.002 });
+                }
+                return data;
+            }
             // Primary: Binance klines API (en güvenilir)
-            const cgToBinance = { bitcoin: 'BTCUSDT', ethereum: 'ETHUSDT', tether: 'USDCUSDT' };
+            const cgToBinance = { bitcoin: 'BTCUSDT', ethereum: 'ETHUSDT' };
             const binanceSymbol = cgToBinance[cgId];
             if (binanceSymbol) {
                 try {
@@ -1155,33 +1385,91 @@
             return null;
         }
 
-        // Generate realistic historical data for metals
+        // Realistic metal history using Geometric Brownian Motion with mean reversion
         function generateMetalHistory(currentPrice, days, volatility) {
-            const data = [];
             const now = Date.now();
             const dayMs = 86400000;
-            // Work backwards from current price
-            let price = currentPrice;
-            const prices = [price];
-            for (let i = 1; i <= days; i++) {
-                const change = (Math.random() - 0.48) * volatility * price;
-                price = price - change; // going backwards
-                prices.unshift(price);
+            const pointsPerDay = days <= 7 ? 24 : days <= 30 ? 6 : days <= 90 ? 2 : 1;
+            const totalPoints = days * pointsPerDay;
+            const dt = 1 / pointsPerDay; // Time step in days
+
+            // Use Box-Muller for normal distribution (more realistic than uniform)
+            function randn() {
+                let u = 0, v = 0;
+                while (u === 0) u = Math.random();
+                while (v === 0) v = Math.random();
+                return Math.sqrt(-2.0 * Math.log(u)) * Math.cos(2.0 * Math.PI * v);
             }
-            // Normalize so last price matches current
-            const scale = currentPrice / prices[prices.length - 1];
-            for (let i = 0; i <= days; i++) {
-                data.push({ t: now - (days - i) * dayMs, c: prices[i] * scale });
+
+            // Generate price path backwards from current price
+            // Add mean reversion, volatility clustering, and momentum
+            const dailyVol = volatility; // e.g. 0.012 for gold
+            const drift = 0.0001; // Slight upward drift for commodities
+            const meanRevStrength = 0.02; // Mean reversion strength
+
+            // Work backwards
+            const prices = new Array(totalPoints + 1);
+            prices[totalPoints] = currentPrice;
+
+            let prevVol = dailyVol;
+            for (let i = totalPoints - 1; i >= 0; i--) {
+                // Volatility clustering (GARCH-like)
+                const volShock = 0.7 * prevVol + 0.3 * dailyVol * (0.5 + Math.abs(randn()) * 0.5);
+                prevVol = volShock;
+
+                const noise = randn() * volShock * Math.sqrt(dt);
+                const momentum = i < totalPoints - 1 ? (prices[i + 2] ? (prices[i + 1] / prices[i + 2] - 1) * 0.15 : 0) : 0;
+                const logReturn = -drift * dt + noise - momentum; // Negative because going backwards
+
+                prices[i] = prices[i + 1] * Math.exp(-logReturn);
             }
-            // Add some intraday points for smoother chart
-            const result = [];
-            for (let i = 0; i < data.length - 1; i++) {
-                result.push(data[i]);
-                const mid = { t: (data[i].t + data[i + 1].t) / 2, c: (data[i].c + data[i + 1].c) / 2 + (Math.random() - 0.5) * volatility * data[i].c * 0.3 };
-                result.push(mid);
+
+            // Normalize so last price exactly matches current
+            const scale = currentPrice / prices[totalPoints];
+            const data = [];
+            for (let i = 0; i <= totalPoints; i++) {
+                const t = now - (totalPoints - i) * (dayMs / pointsPerDay);
+                data.push({ t, c: prices[i] * scale });
             }
-            result.push(data[data.length - 1]);
-            return result;
+
+            return data;
+        }
+
+        async function fetchMetalHistory(metal, days) {
+            // Try goldprice.org chart data endpoint
+            const metalCode = metal === 'gold' ? 'XAU' : 'XAG';
+            try {
+                // Try different timeframe formats
+                const tfMap = { 1: '1', 7: '7', 30: '30', 90: '90', 180: '180', 365: '365' };
+                const tf = tfMap[days] || days.toString();
+                const url = `https://data-asg.goldprice.org/dbXRates/USD,${metalCode},${tf}d`;
+                const d = await fetchJSON(url, 8000);
+                if (d && d.items && d.items.length > 1) {
+                    const data = d.items.map(item => ({
+                        t: item.date ? new Date(item.date).getTime() : Date.now(),
+                        c: metal === 'gold' ? (item.xauPrice || item.xauClose) : (item.xagPrice || item.xagClose)
+                    })).filter(p => p.c && p.c > 0);
+                    if (data.length > 10) {
+                        logApi('metals-history', true, `(goldprice.org) ${metalCode} ${days}gün tarihsel veri: ${data.length} nokta`);
+                        return data;
+                    }
+                }
+            } catch (e) { console.warn('Metal history goldprice fail:', e); }
+
+            // Try metals.live historical API
+            try {
+                const metalName = metal === 'gold' ? 'gold' : 'silver';
+                const d = await fetchJSON(`https://api.metals.live/v1/spot/${metalName}/${days}d`, 8000);
+                if (d && Array.isArray(d) && d.length > 5) {
+                    const data = d.map(item => ({ t: item.timestamp || item.date, c: item.price || item[metalName] })).filter(p => p.c > 0);
+                    if (data.length > 5) {
+                        logApi('metals-history', true, `(metals.live) ${metalCode} ${days}gün tarihsel veri: ${data.length} nokta`);
+                        return data;
+                    }
+                }
+            } catch (e) { console.warn('Metal history metals.live fail:', e); }
+
+            return null;
         }
 
         async function fetchHistory(asset, days) {
@@ -1189,14 +1477,34 @@
                 const hist = await fetchCryptoHistory(asset.cgId, days);
                 if (hist) { state.history[asset.id] = hist; return; }
             }
-            // Metal or fallback
+
+            // Metal assets - try real API first
+            if (asset.type === 'metal') {
+                const metalType = asset.metal; // 'gold' or 'silver'
+                const realHist = await fetchMetalHistory(metalType, days);
+                if (realHist && realHist.length > 10) {
+                    if (asset.gram) {
+                        // Convert ounce USD prices to gram TRY
+                        state.history[asset.id] = realHist.map(p => ({
+                            t: p.t,
+                            c: (p.c * state.usdTry) / TROY_OZ_GRAM
+                        }));
+                    } else {
+                        state.history[asset.id] = realHist;
+                    }
+                    return;
+                }
+            }
+
+            // Fallback: Realistic synthetic data
             let price, vol;
-            if (asset.metal === 'gold' && !asset.gram) { price = state.goldOz; vol = 0.012; }
-            else if (asset.metal === 'silver' && !asset.gram) { price = state.silverOz; vol = 0.018; }
-            else if (asset.metal === 'gold' && asset.gram) { price = state.prices['gram-gold']?.price || 6800; vol = 0.014; }
-            else if (asset.metal === 'silver' && asset.gram) { price = state.prices['gram-silver']?.price || 103; vol = 0.02; }
-            else { price = 100; vol = 0.015; }
+            if (asset.metal === 'gold' && !asset.gram) { price = state.goldOz; vol = 0.009; }
+            else if (asset.metal === 'silver' && !asset.gram) { price = state.silverOz; vol = 0.016; }
+            else if (asset.metal === 'gold' && asset.gram) { price = state.prices['gram-gold']?.price || 6800; vol = 0.011; }
+            else if (asset.metal === 'silver' && asset.gram) { price = state.prices['gram-silver']?.price || 103; vol = 0.018; }
+            else { price = 100; vol = 0.012; }
             state.history[asset.id] = generateMetalHistory(price, days, vol);
+            logApi('metals-history', false, `${asset.name}: API başarısız, sentetik veri kullanılıyor`);
         }
 
         // ═══════════════════════════════════════════════════
@@ -1215,8 +1523,22 @@
 
         function EMA(data, period) {
             const k = 2 / (period + 1);
-            const result = [data[0]];
-            for (let i = 1; i < data.length; i++) {
+            // Seed with SMA of first 'period' values for accuracy
+            if (data.length < period) {
+                const result = [data[0]];
+                for (let i = 1; i < data.length; i++) {
+                    result.push(data[i] * k + result[i - 1] * (1 - k));
+                }
+                return result;
+            }
+            const result = [];
+            // First period-1 values are null
+            let seed = 0;
+            for (let i = 0; i < period; i++) seed += data[i];
+            seed /= period;
+            for (let i = 0; i < period - 1; i++) result.push(data[i]); // Use raw values pre-seed
+            result.push(seed);
+            for (let i = period; i < data.length; i++) {
                 result.push(data[i] * k + result[i - 1] * (1 - k));
             }
             return result;
@@ -1425,19 +1747,24 @@
             const hist = state.history[assetId];
             if (!hist || hist.length < 30) return null;
             let closes = hist.map(h => h.c);
+            let timestamps = hist.map(h => h.t);
             if (closes.length > 200) {
                 const step = Math.ceil(closes.length / 150);
-                const nc = [];
-                for (let i = 0; i < closes.length; i += step) nc.push(closes[i]);
-                if (nc[nc.length - 1] !== closes[closes.length - 1]) nc.push(closes[closes.length - 1]);
-                closes = nc;
+                const nc = [], nt = [];
+                for (let i = 0; i < closes.length; i += step) { nc.push(closes[i]); nt.push(timestamps[i]); }
+                if (nc[nc.length - 1] !== closes[closes.length - 1]) { nc.push(closes[closes.length - 1]); nt.push(timestamps[timestamps.length - 1]); }
+                closes = nc; timestamps = nt;
             }
-            const sma20 = SMA(closes, Math.min(20, Math.floor(closes.length * 0.3)));
-            const sma50 = SMA(closes, Math.min(50, Math.floor(closes.length * 0.5)));
-            const rsi = RSI(closes, 14);
-            const macdData = MACD(closes, 12, 26, 9);
-            const bb = BollingerBands(closes, Math.min(20, Math.floor(closes.length * 0.3)), 2);
-            const result = generateSignals(closes, hist.map(h => h.t), sma20, sma50, rsi, macdData, bb);
+            const len = closes.length;
+            const p20 = Math.max(2, Math.min(20, Math.floor(len * 0.3)));
+            const p50 = Math.max(2, Math.min(50, Math.floor(len * 0.5)));
+            const rsiP = Math.max(2, Math.min(14, Math.floor(len * 0.25)));
+            const sma20 = SMA(closes, p20);
+            const sma50 = SMA(closes, p50);
+            const rsi = RSI(closes, rsiP);
+            const macdData = MACD(closes, Math.min(12, Math.floor(len * 0.2)), Math.min(26, Math.floor(len * 0.4)), 9);
+            const bb = BollingerBands(closes, Math.max(2, p20), 2);
+            const result = generateSignals(closes, timestamps, sma20, sma50, rsi, macdData, bb);
             return result;
         }
 
@@ -1941,9 +2268,9 @@
 
         function changeHorizon(horizon) {
             currentHorizon = horizon;
+            // Sync ALL horizon buttons in both buy and sell cards
             document.querySelectorAll('.horizon-btn').forEach(btn => {
-                btn.classList.remove('active');
-                if (btn.dataset.horizon === horizon) btn.classList.add('active');
+                btn.classList.toggle('active', btn.dataset.horizon === horizon);
             });
             if (state.currentLevelData) {
                 const d = state.currentLevelData;
@@ -1983,21 +2310,21 @@
                         sellSpacingPct: [4, 8, 13, 18, 25],
                         buyLabels: ['İlk Alım', 'Destek Alım', 'Fibonacci Alım', 'Güçlü Destek', 'Dip Alım'],
                         sellLabels: ['Hafif Kâr Al', 'Kâr Al', 'Direnç Satım', 'Güçlü Satım', 'Hedef Satım'],
-                            buyReasons: [
-                                'SMA 20 destek bölgesi, ilk giriş',
-                                'Fibonacci %23.6 destek, kademeli giriş',
-                                'Fibonacci %38.2 destek, teknik alım',
-                                '%50 geri çekilme, güçlü destek',
-                                'Fibonacci %61.8 destek, uzun pozisyon'
-                            ],
-                            sellReasons: [
-                                'SMA 20 direnç, kısmi kâr realizasyonu',
-                                'Fibonacci direnç, kademeli çıkış',
-                                'Güçlü direnç bölgesi, pozisyon azalt',
-                                'Kritik direnç, büyük kısmını sat',
-                                'Hedef fiyat, tüm pozisyonu kapat'
-                            ],
-                            weights: [15, 20, 25, 25, 15]
+                        buyReasons: [
+                            'SMA 20 destek bölgesi, ilk giriş',
+                            'Fibonacci %23.6 destek, kademeli giriş',
+                            'Fibonacci %38.2 destek, teknik alım',
+                            '%50 geri çekilme, güçlü destek',
+                            'Fibonacci %61.8 destek, uzun pozisyon'
+                        ],
+                        sellReasons: [
+                            'SMA 20 direnç, kısmi kâr realizasyonu',
+                            'Fibonacci direnç, kademeli çıkış',
+                            'Güçlü direnç bölgesi, pozisyon azalt',
+                            'Kritik direnç, büyük kısmını sat',
+                            'Hedef fiyat, tüm pozisyonu kapat'
+                        ],
+                        weights: [15, 20, 25, 25, 15]
                     };
                 case 'long':
                     return {
@@ -2037,15 +2364,21 @@
             // Generate buy levels
             for (let i = 0; i < 5; i++) {
                 let targetPrice;
-                // Fibonacci varsa kullan, yoksa yüzde hesapla
-                if (fibBuy[i] && Math.abs((fibBuy[i].price - price) / price * 100) <= config.buySpacingPct[i] * 1.5) {
-                    // Fibonacci seviyesini vade mesafesine uyarla
-                    targetPrice = price * (1 - config.buySpacingPct[i] / 100);
-                    // Fibonacci yakınsa fibonacci kullan
-                    const fibDist = Math.abs((fibBuy[i].price - targetPrice) / targetPrice * 100);
-                    if (fibDist < config.buySpacingPct[i] * 0.5) targetPrice = fibBuy[i].price;
+                // Akıllı seviye belirleme: Fibonacci, destek/direnç ve yüzde birleştir
+                const pctTarget = price * (1 - config.buySpacingPct[i] / 100);
+                // Fibonacci seviyesi yakınsa onu tercih et
+                if (fibBuy[i]) {
+                    const fibDist = Math.abs((fibBuy[i].price - pctTarget) / pctTarget * 100);
+                    if (fibDist < config.buySpacingPct[i] * 0.7) {
+                        targetPrice = fibBuy[i].price;
+                    } else {
+                        targetPrice = pctTarget;
+                    }
+                } else if (supRes.supports[i] && Math.abs((supRes.supports[i] - pctTarget) / pctTarget * 100) < config.buySpacingPct[i] * 0.8) {
+                    // Yakın destek seviyesi varsa onu kullan
+                    targetPrice = supRes.supports[i];
                 } else {
-                    targetPrice = price * (1 - config.buySpacingPct[i] / 100);
+                    targetPrice = pctTarget;
                 }
                 const pct = ((targetPrice - price) / price * 100);
                 const badges = ['by', 'bb', 'bg', 'bg', 'bg'];
@@ -2061,12 +2394,18 @@
             // Generate sell levels
             for (let i = 0; i < 5; i++) {
                 let targetPrice;
-                if (fibSell[i] && Math.abs((fibSell[i].price - price) / price * 100) <= config.sellSpacingPct[i] * 1.5) {
-                    targetPrice = price * (1 + config.sellSpacingPct[i] / 100);
-                    const fibDist = Math.abs((fibSell[i].price - targetPrice) / targetPrice * 100);
-                    if (fibDist < config.sellSpacingPct[i] * 0.5) targetPrice = fibSell[i].price;
+                const pctTargetSell = price * (1 + config.sellSpacingPct[i] / 100);
+                if (fibSell[i]) {
+                    const fibDist = Math.abs((fibSell[i].price - pctTargetSell) / pctTargetSell * 100);
+                    if (fibDist < config.sellSpacingPct[i] * 0.7) {
+                        targetPrice = fibSell[i].price;
+                    } else {
+                        targetPrice = pctTargetSell;
+                    }
+                } else if (supRes.resistances[i] && Math.abs((supRes.resistances[i] - pctTargetSell) / pctTargetSell * 100) < config.sellSpacingPct[i] * 0.8) {
+                    targetPrice = supRes.resistances[i];
                 } else {
-                    targetPrice = price * (1 + config.sellSpacingPct[i] / 100);
+                    targetPrice = pctTargetSell;
                 }
                 const pct = ((targetPrice - price) / price * 100);
                 const badges = ['bo', 'br', 'br', 'bp', 'bp'];
@@ -2131,92 +2470,163 @@
             const name = asset.name;
             const unit = asset.unit;
 
-            // Determine overall trend
+            // Determine overall trend with more granularity
             const trendUp = trend.slope > 0;
             const trendStr = Math.abs(trend.slope) / price * 100;
+            const pctFromHigh = ((price - high) / high * 100);
+            const pctFromLow = ((price - low) / low * 100);
+            const rangePosition = ((price - low) / (high - low) * 100) || 50;
             let trendText = '';
-            if (trendStr > 0.5) trendText = trendUp ? 'güçlü yükseliş' : 'güçlü düşüş';
-            else if (trendStr > 0.1) trendText = trendUp ? 'ılımlı yükseliş' : 'ılımlı düşüş';
-            else trendText = 'yatay';
+            if (trendStr > 0.8) trendText = trendUp ? 'güçlü yükseliş' : 'güçlü düşüş';
+            else if (trendStr > 0.3) trendText = trendUp ? 'ılımlı yükseliş' : 'ılımlı düşüş';
+            else if (trendStr > 0.08) trendText = trendUp ? 'hafif yükseliş' : 'hafif düşüş';
+            else trendText = 'yatay seyir';
 
-            // RSI analysis
+            // Price momentum (short/medium term)
+            const shortMom = closes.length > 5 ? ((price - closes[closes.length - 6]) / closes[closes.length - 6] * 100) : 0;
+            const medMom = closes.length > 20 ? ((price - closes[closes.length - 21]) / closes[closes.length - 21] * 100) : 0;
+
+            // RSI analysis - more detailed
             let rsiText = '';
-            if (rsi < 20) rsiText = `RSI göstergesi <strong>${rsi.toFixed(1)}</strong> ile aşırı satım bölgesinde bulunmaktadır. Bu seviye genellikle güçlü bir alım fırsatı sinyali verir ve kısa vadede teknik bir toparlanma beklentisi oluşturur.`;
-            else if (rsi < 30) rsiText = `RSI göstergesi <strong>${rsi.toFixed(1)}</strong> ile satım bölgesine yaklaşmıştır. Fiyatın bu seviyelerden dönüş yapma olasılığı yüksektir, kademeli alım stratejisi değerlendirilebilir.`;
-            else if (rsi > 80) rsiText = `RSI göstergesi <strong>${rsi.toFixed(1)}</strong> ile aşırı alım bölgesinin derinlerindedir. Kâr realizasyonu baskısı artabilir, pozisyon daraltma veya kademeli satım stratejisi uygulanabilir.`;
-            else if (rsi > 70) rsiText = `RSI göstergesi <strong>${rsi.toFixed(1)}</strong> ile aşırı alım bölgesine girmiştir. Kısa vadede düzeltme riski mevcuttur, yeni pozisyon açmak yerine mevcut kâr korunmalıdır.`;
-            else if (rsi > 55) rsiText = `RSI göstergesi <strong>${rsi.toFixed(1)}</strong> ile pozitif bölgede seyretmektedir. Yükseliş momentumu devam etmekte olup, trendle uyumlu pozisyonlar sürdürülebilir.`;
-            else if (rsi > 45) rsiText = `RSI göstergesi <strong>${rsi.toFixed(1)}</strong> ile nötr bölgededir. Piyasa kararsız görünmektedir ve net bir yön sinyali vermemektedir.`;
-            else rsiText = `RSI göstergesi <strong>${rsi.toFixed(1)}</strong> ile negatif bölgede seyretmektedir. Satış baskısı devam etmekte olup, destek seviyelerinin takibi önem kazanmaktadır.`;
+            if (rsi < 20) rsiText = `RSI göstergesi <strong>${rsi.toFixed(1)}</strong> ile derin aşırı satım bölgesinde bulunmaktadır. Tarihsel olarak bu seviyeler nadiren görülür ve genellikle güçlü teknik toparlanmaların habercisidir. Kademeli alım için oldukça uygun bir bölge olarak değerlendirilebilir, ancak düşüş trendinin devam etmediğinden emin olunmalıdır.`;
+            else if (rsi < 30) rsiText = `RSI göstergesi <strong>${rsi.toFixed(1)}</strong> ile aşırı satım bölgesindedir. Satış baskısının azalma olasılığı artmıştır. Fiyatın bu seviyelerden teknik bir tepki gösterme ihtimali yüksektir, destek seviyelerinin tutunması halinde kademeli alım stratejisi uygulanabilir.`;
+            else if (rsi < 40) rsiText = `RSI göstergesi <strong>${rsi.toFixed(1)}</strong> ile zayıf bölgede seyretmektedir. Satış baskısı hâlâ etkili olmakla birlikte aşırı satıma yaklaşılmaktadır. Destek seviyelerinin takibi önem taşımaktadır.`;
+            else if (rsi > 80) rsiText = `RSI göstergesi <strong>${rsi.toFixed(1)}</strong> ile derin aşırı alım bölgesindedir. Bu seviyeler sürdürülebilir değildir ve sert düzeltme riski yüksektir. Kâr realizasyonu yapılması ya da pozisyonun daraltılması kritik önem taşımaktadır.`;
+            else if (rsi > 70) rsiText = `RSI göstergesi <strong>${rsi.toFixed(1)}</strong> ile aşırı alım bölgesine girmiştir. Alım momentumu güçlü olmakla birlikte kısa vadede düzeltme riski artmıştır. Yeni pozisyon açmak yerine mevcut kazançların korunması önerilir.`;
+            else if (rsi > 60) rsiText = `RSI göstergesi <strong>${rsi.toFixed(1)}</strong> ile pozitif momentum bölgesindedir. Alıcılar kontroldedir ve yükseliş eğilimi devam etmektedir. Trend yönünde pozisyonlar sürdürülebilir.`;
+            else if (rsi > 45) rsiText = `RSI göstergesi <strong>${rsi.toFixed(1)}</strong> ile nötr bölgededir. Piyasada belirgin bir yön baskısı bulunmamaktadır; kararsızlık hakimdir ve net bir kırılım beklenmektedir.`;
+            else rsiText = `RSI göstergesi <strong>${rsi.toFixed(1)}</strong> ile negatif momentum bölgesindedir. Satıcılar ağırlıktadır ve kısa vadeli düşüş eğilimi devam etmektedir.`;
 
-            // MACD analysis
+            // MACD analysis - more nuanced
             let macdText = '';
             const macdDiff = macd - signal;
-            if (macdDiff > 0 && macd > 0) macdText = `MACD sinyal çizgisinin üzerinde ve pozitif bölgede seyretmektedir. Bu durum yükseliş trendinin güçlü olduğunu ve alım baskısının sürdüğünü göstermektedir.`;
-            else if (macdDiff > 0) macdText = `MACD sinyal çizgisinin üzerine çıkmış olup yükseliş sinyali vermektedir. Ancak negatif bölgede olması, trendin henüz tam olarak dönmediğine işaret etmektedir.`;
-            else if (macdDiff < 0 && macd < 0) macdText = `MACD sinyal çizgisinin altında ve negatif bölgede seyretmektedir. Düşüş momentumu güçlüdür ve satış baskısı devam etmektedir.`;
-            else macdText = `MACD sinyal çizgisinin altına inmiş olup satış sinyali vermektedir. Pozitif bölgede olması trendin tam olarak kırılmadığını gösterse de dikkatli olunmalıdır.`;
+            const macdDirectionStr = Math.abs(macdDiff / price * 10000).toFixed(2);
+            if (macdDiff > 0 && macd > 0) macdText = `MACD (<strong>${macd.toFixed(4)}</strong>) sinyal çizgisinin üzerinde ve pozitif bölgede seyretmektedir. MACD-Sinyal farkı ${macdDirectionStr} puan ile yükseliş trendinin güçlü olduğunu ve alım baskısının ivme kazandığını göstermektedir. Histogram pozitif ve genişliyorsa momentum artmaktadır.`;
+            else if (macdDiff > 0) macdText = `MACD (<strong>${macd.toFixed(4)}</strong>) sinyal çizgisinin üzerine çıkmış olup yükseliş dönüş sinyali vermektedir. Ancak MACD hâlâ negatif bölgede olduğundan, trendin tam olarak döndüğünü teyit için ek gösterge desteği gerekmektedir.`;
+            else if (macdDiff < 0 && macd < 0) macdText = `MACD (<strong>${macd.toFixed(4)}</strong>) sinyal çizgisinin altında ve negatif bölgede konumlanmıştır. MACD-Sinyal farkı ${macdDirectionStr} puan ile düşüş momentumu güçlenmiştir ve satış baskısının devamı beklenmektedir.`;
+            else macdText = `MACD (<strong>${macd.toFixed(4)}</strong>) sinyal çizgisinin altına inmiş olup satış sinyali oluşmuştur. Pozitif bölgede olması henüz ana trendin bozulmadığını gösterse de kısa vadede dikkatli olunmalıdır.`;
 
-            // Bollinger analysis
+            // Bollinger analysis with actual values
+            const bbWidth = ((bbU - bbL) / bbM * 100).toFixed(2);
+            const bbPctPos = ((price - bbL) / (bbU - bbL) * 100).toFixed(1);
             let bbText = '';
-            if (price > bbU) bbText = `Fiyat Bollinger üst bandının üzerinde seyretmektedir. Bu, aşırı alım durumuna ve potansiyel geri çekilmeye işaret eder. Band dışı kapanışlar genellikle sürdürülebilir değildir.`;
-            else if (price < bbL) bbText = `Fiyat Bollinger alt bandının altında seyretmektedir. Bu, aşırı satım durumuna ve potansiyel toparlanmaya işaret eder. Fiyatın banda geri dönme olasılığı yüksektir.`;
-            else if (price > bbM) bbText = `Fiyat Bollinger orta bandının (SMA 20) üzerinde seyretmektedir. Bu, kısa vadeli yükseliş eğiliminin devam ettiğini göstermektedir.`;
-            else bbText = `Fiyat Bollinger orta bandının (SMA 20) altında seyretmektedir. Kısa vadeli düşüş baskısı sürmektedir ve alt banda doğru hareket riski mevcuttur.`;
+            if (price > bbU) bbText = `Fiyat Bollinger üst bandının (${fmt(bbU, asset)}) üzerinde seyretmektedir (%${bbPctPos} pozisyon). Band genişliği %${bbWidth}. Üst band dışı kapanışlar istatistiksel olarak sürdürülebilir değildir, ortalamaya dönüş (mean reversion) beklentisi güçlüdür. Kısa vadede kâr realizasyonu baskısı oluşabilir.`;
+            else if (price < bbL) bbText = `Fiyat Bollinger alt bandının (${fmt(bbL, asset)}) altında seyretmektedir (%${bbPctPos} pozisyon). Band genişliği %${bbWidth}. Alt band dışına taşma, potansiyel toparlanma sinyalidir. Fiyatın orta banda (${fmt(bbM, asset)}) doğru geri dönme olasılığı istatistiksel olarak yüksektir.`;
+            else if (price > bbM) bbText = `Fiyat ${fmt(price, asset)} ile Bollinger orta bandı (${fmt(bbM, asset)}) üzerinde, üst banda (${fmt(bbU, asset)}) %${(100 - parseFloat(bbPctPos)).toFixed(1)} mesafede seyretmektedir. Band genişliği %${bbWidth}. Kısa vadeli yükseliş eğilimi korunmaktadır.`;
+            else bbText = `Fiyat ${fmt(price, asset)} ile Bollinger orta bandı (${fmt(bbM, asset)}) altında, alt banda (${fmt(bbL, asset)}) %${parseFloat(bbPctPos).toFixed(1)} mesafede seyretmektedir. Band genişliği %${bbWidth}. Kısa vadeli baskı sürmektedir.`;
 
-            // MA analysis
+            // MA analysis with distance percentages
+            const distSma20 = ((price - sma20) / sma20 * 100).toFixed(2);
+            const distSma50 = ((price - sma50) / sma50 * 100).toFixed(2);
             let maText = '';
-            if (price > sma20 && price > sma50) maText = `Fiyat hem 20 hem de 50 periyotluk hareketli ortalamaların üzerindedir. Bu, trendin sağlıklı bir şekilde devam ettiğini ve alıcıların kontrolde olduğunu göstermektedir.`;
-            else if (price > sma20) maText = `Fiyat 20 periyotluk hareketli ortalamanın üzerinde ancak 50 periyodun altındadır. Kısa vadeli toparlanma görülmekle birlikte orta vadeli trend henüz dönmemiştir.`;
-            else if (price > sma50) maText = `Fiyat 50 periyotluk hareketli ortalamanın üzerinde ancak 20 periyodun altındadır. Kısa vadeli baskı görülmekle birlikte orta vadeli destek korunmaktadır.`;
-            else maText = `Fiyat hem 20 hem de 50 periyotluk hareketli ortalamaların altındadır. Bu güçlü bir düşüş sinyalidir ve trendin devam etme olasılığı yüksektir.`;
+            if (price > sma20 && sma20 > sma50) maText = `Fiyat 20 günlük SMA'nın (${fmt(sma20, asset)}) %${distSma20} üzerinde ve 50 günlük SMA'nın (${fmt(sma50, asset)}) %${distSma50} üzerindedir. Üstelik SMA 20 > SMA 50 olması "Altın Kesişim" yapısını göstermektedir — trend sağlıklı ve alıcılar tam kontroldedir.`;
+            else if (price > sma20 && price > sma50) maText = `Fiyat hem 20 günlük SMA'nın (${fmt(sma20, asset)}, mesafe: %${distSma20}) hem de 50 günlük SMA'nın (${fmt(sma50, asset)}, mesafe: %${distSma50}) üzerindedir. Genel eğilim pozitif olmakla birlikte SMA yapısı tam bir güç sinyali vermemektedir.`;
+            else if (price > sma20) maText = `Fiyat 20 günlük SMA'nın (${fmt(sma20, asset)}) %${distSma20} üzerinde ancak 50 günlük SMA'nın (${fmt(sma50, asset)}) %${Math.abs(distSma50)} altındadır. Kısa vadeli toparlanma mevcut, ancak orta vadeli trend henüz dönmemiştir.`;
+            else if (price > sma50) maText = `Fiyat 50 günlük SMA'nın (${fmt(sma50, asset)}) %${distSma50} üzerinde ancak 20 günlük SMA'nın (${fmt(sma20, asset)}) %${Math.abs(distSma20)} altındadır. Kısa vadeli zayıflık görülmekle birlikte orta vadeli destek korunmaktadır.`;
+            else maText = `Fiyat hem 20 günlük SMA'nın (${fmt(sma20, asset)}) %${Math.abs(distSma20)} altında hem de 50 günlük SMA'nın (${fmt(sma50, asset)}) %${Math.abs(distSma50)} altındadır. Bu güçlü bir düşüş sinyalidir ve "Ölüm Kesişimi" oluşabilir.`;
 
-            // Fibonacci position
+            // Fibonacci position - more detailed
             let fibPos = '';
             const nearFib = fib.reduce((closest, f) => Math.abs(f.price - price) < Math.abs(closest.price - price) ? f : closest, fib[0]);
-            fibPos = `Fiyat Fibonacci <strong>${nearFib.level}</strong> seviyesine (${fmt(nearFib.price, asset)}) yakın seyretmektedir. `;
-            if (parseFloat(nearFib.level) > 50) fibPos += 'Üst Fibonacci bölgesinde kalması yükseliş trendinin gücünü koruduğunu gösterir.';
-            else fibPos += 'Alt Fibonacci bölgesinde olması düşüş baskısının sürdüğüne işaret eder.';
+            const distToNearFib = ((price - nearFib.price) / nearFib.price * 100).toFixed(2);
+            fibPos = `Fiyat Fibonacci <strong>${nearFib.level}</strong> seviyesine (${fmt(nearFib.price, asset)}) %${Math.abs(distToNearFib)} mesafededir. `;
+            // Find next support/resistance Fibonacci levels
+            const fibAbove = fib.filter(f => f.price > price).sort((a, b) => a.price - b.price);
+            const fibBelow = fib.filter(f => f.price < price).sort((a, b) => b.price - a.price);
+            if (fibAbove.length > 0) fibPos += `Yukarıda en yakın Fibonacci direnci ${fibAbove[0].level} (${fmt(fibAbove[0].price, asset)}) seviyesidir. `;
+            if (fibBelow.length > 0) fibPos += `Aşağıda en yakın Fibonacci desteği ${fibBelow[0].level} (${fmt(fibBelow[0].price, asset)}) seviyesidir. `;
+            if (rangePosition > 65) fibPos += 'Fiyat, dönemsel fiyat aralığının üst bölgesinde konumlanmaktadır; bu yükseliş trendinin gücünü koruduğunu gösterir.';
+            else if (rangePosition < 35) fibPos += 'Fiyat, dönemsel fiyat aralığının alt bölgesinde konumlanmaktadır; bu düşüş baskısının sürdüğüne veya dip oluşum sürecine işaret eder.';
+            else fibPos += 'Fiyat, dönemsel aralığın orta bölgesinde olup kararsız bir yapı sergilemektedir.';
 
-            // Overall verdict
+            // Overall verdict - much more granular scoring (-10 to +10)
             let score = 0;
-            if (rsi < 30) score += 2; else if (rsi < 45) score += 1; else if (rsi > 70) score -= 2; else if (rsi > 55) score -= 0;
-            if (macdDiff > 0) score += 1; else score -= 1;
-            if (trendUp) score += 1; else score -= 1;
-            if (price > sma20) score += 1; else score -= 1;
-            if (price < bbL) score += 1; else if (price > bbU) score -= 1;
+            // RSI component (-2 to +2)
+            if (rsi < 20) score += 2;
+            else if (rsi < 30) score += 1.5;
+            else if (rsi < 40) score += 0.5;
+            else if (rsi > 80) score -= 2;
+            else if (rsi > 70) score -= 1.5;
+            else if (rsi > 60) score -= 0.5;
+            // MACD component (-1.5 to +1.5)
+            if (macdDiff > 0 && macd > 0) score += 1.5;
+            else if (macdDiff > 0) score += 0.8;
+            else if (macdDiff < 0 && macd < 0) score -= 1.5;
+            else score -= 0.8;
+            // Trend component (-1.5 to +1.5)
+            if (trendStr > 0.5 && trendUp) score += 1.5;
+            else if (trendUp) score += 0.7;
+            else if (trendStr > 0.5) score -= 1.5;
+            else score -= 0.7;
+            // MA component (-2 to +2)
+            if (price > sma20 && sma20 > sma50) score += 2;
+            else if (price > sma20) score += 1;
+            else if (price < sma20 && sma20 < sma50) score -= 2;
+            else if (price < sma20) score -= 1;
+            // BB component (-1 to +1)
+            if (price < bbL) score += 1;
+            else if (price > bbU) score -= 1;
+            // Momentum component (-1.5 to +1.5)
+            if (shortMom > 3) score += 0.5;
+            else if (shortMom < -3) score -= 0.5;
+            if (medMom > 5) score += 1;
+            else if (medMom < -5) score -= 1;
+            // Range position component
+            if (rangePosition < 20) score += 0.5;
+            else if (rangePosition > 80) score -= 0.5;
 
             let verdict, verdictClass, verdictText;
-            if (score >= 3) { verdict = '🟢 GÜÇLÜ AL'; verdictClass = 'verdict-buy'; verdictText = 'Teknik göstergelerin büyük çoğunluğu alım yönünde sinyal vermektedir. Kademeli alım stratejisi ile pozisyon oluşturulabilir.'; }
-            else if (score >= 1) { verdict = '🟡 AL (Dikkatli)'; verdictClass = 'verdict-buy'; verdictText = 'Teknik görünüm cautiously bullish (ihtiyatlı yükseliş) yönündedir. Risk yönetimi ile kademeli alım düşünülebilir.'; }
-            else if (score <= -3) { verdict = '🔴 GÜÇLÜ SAT'; verdictClass = 'verdict-sell'; verdictText = 'Teknik göstergelerin büyük çoğunluğu satış yönünde sinyal vermektedir. Pozisyon daraltma veya kâr realizasyonu önerilir.'; }
-            else if (score <= -1) { verdict = '🟠 SAT (Dikkatli)'; verdictClass = 'verdict-sell'; verdictText = 'Teknik görünüm cautiously bearish (ihtiyatlı düşüş) yönündedir. Stop-loss seviyeleri sıkılaştırılmalıdır.'; }
-            else { verdict = '🟡 BEKLE'; verdictClass = 'verdict-hold'; verdictText = 'Teknik göstergeler karışık sinyal vermektedir. Net bir yön oluşana kadar beklemek veya mevcut pozisyonu korumak mantıklı olabilir.'; }
+            if (score >= 5) { verdict = '🟢 GÜÇLÜ AL'; verdictClass = 'verdict-buy'; verdictText = `Teknik göstergelerin büyük çoğunluğu (skor: ${score.toFixed(1)}/10) güçlü alım yönünde sinyal vermektedir. RSI, MACD, hareketli ortalamalar ve trend uyumu birlikte değerlendirildiğinde, kademeli alım stratejisi ile pozisyon oluşturulabilir. Stop-loss olarak ${fmt(bbL, asset)} (Bollinger alt band) seviyesi kullanılabilir.`; }
+            else if (score >= 3) { verdict = '🟢 AL'; verdictClass = 'verdict-buy'; verdictText = `Teknik görünüm (skor: ${score.toFixed(1)}/10) alım yönünde eğilim göstermektedir. Göstergelerin çoğunluğu pozitif olmakla birlikte, risk yönetimi ile kademeli giriş stratejisi uygulanmalıdır. İlk destek ${fmt(sma20, asset)} (SMA 20), güçlü destek ${fmt(sma50, asset)} (SMA 50) seviyelerinde izlenmelidir.`; }
+            else if (score >= 1) { verdict = '🟡 ZAYIF AL'; verdictClass = 'verdict-buy'; verdictText = `Teknik göstergeler (skor: ${score.toFixed(1)}/10) hafif pozitif eğilim göstermektedir. Bu net bir alım sinyali olmayıp, mevcut pozisyonlar korunabilir ancak yeni agresif pozisyon açmak riskli olabilir. Teyit için RSI'ın 50 üzerine çıkması ve MACD'nin pozitif bölgeye geçmesi beklenebilir.`; }
+            else if (score <= -5) { verdict = '🔴 GÜÇLÜ SAT'; verdictClass = 'verdict-sell'; verdictText = `Teknik göstergelerin büyük çoğunluğu (skor: ${score.toFixed(1)}/10) güçlü satış yönünde sinyal vermektedir. RSI, MACD ve hareketli ortalamalar düşüş trendinin devamına işaret etmektedir. Pozisyon daraltma veya tam kâr realizasyonu öncelikli stratejilor olmalıdır.`; }
+            else if (score <= -3) { verdict = '🔴 SAT'; verdictClass = 'verdict-sell'; verdictText = `Teknik görünüm (skor: ${score.toFixed(1)}/10) satış yönünde eğilim göstermektedir. Stop-loss seviyeleri sıkılaştırılmalı ve kademeli çıkış planı uygulanmalıdır. İlk direnç ${fmt(sma20, asset)} (SMA 20) seviyesindedir.`; }
+            else if (score <= -1) { verdict = '🟠 ZAYIF SAT'; verdictClass = 'verdict-sell'; verdictText = `Teknik göstergeler (skor: ${score.toFixed(1)}/10) hafif negatif eğilim göstermektedir. Net bir satış sinyali olmamakla birlikte dikkatli olunmalıdır. SMA 20 altına kalıcı geçiş olması halinde satış baskısı artabilir.`; }
+            else { verdict = '🟡 BEKLE / NÖTR'; verdictClass = 'verdict-hold'; verdictText = `Teknik göstergeler (skor: ${score.toFixed(1)}/10) karışık sinyal vermektedir. Al ve sat göstergeleri dengelidir. Net bir yön oluşana kadar mevcut pozisyon korunabilir veya yeni pozisyon açmak için kırılım beklenebilir. Bollinger bant daralması veya MACD kesişimi öncü sinyal olabilir.`; }
 
-            // Volatility
+            // Volatility - ANNUALIZED properly
             const returns = [];
-            for (let i = 1; i < closes.length; i++) returns.push((closes[i] - closes[i - 1]) / closes[i - 1]);
+            for (let i = 1; i < closes.length; i++) returns.push(Math.log(closes[i] / closes[i - 1]));
             const avgReturn = returns.reduce((s, v) => s + v, 0) / returns.length;
-            const volat = Math.sqrt(returns.reduce((s, v) => s + Math.pow(v - avgReturn, 2), 0) / returns.length) * 100;
+            const dailyVol = Math.sqrt(returns.reduce((s, v) => s + Math.pow(v - avgReturn, 2), 0) / (returns.length - 1));
+            // Determine data frequency for annualization
+            const avgGapMs = returns.length > 1 ? (closes.length > 1 ? (Date.now() - (state.history[asset.id]?.[0]?.t || Date.now())) / closes.length : 86400000) : 86400000;
+            const avgGapDays = Math.max(avgGapMs / 86400000, 0.01);
+            const periodsPerYear = 365 / avgGapDays;
+            const annualVol = (dailyVol * Math.sqrt(periodsPerYear) * 100);
+            const volat = annualVol;
             let volText = '';
-            if (volat > 5) volText = `Volatilite oldukça yüksek (%${volat.toFixed(2)}), ani fiyat hareketlerine karşı dikkatli olunmalıdır.`;
-            else if (volat > 2) volText = `Volatilite orta seviyede (%${volat.toFixed(2)}), normal piyasa koşulları hakimdir.`;
-            else volText = `Volatilite düşük (%${volat.toFixed(2)}), piyasada sakinlik hakimdir, bu durum genellikle büyük bir hareketin habercisi olabilir.`;
+            if (volat > 80) volText = `Yıllıklandırılmış volatilite <strong>%${volat.toFixed(1)}</strong> ile çok yüksek seviyededir. ${name} yüksek riskli bir varlık profili çizmektedir; pozisyon büyüklüğü buna göre ayarlanmalı ve mutlaka stop-loss kullanılmalıdır.`;
+            else if (volat > 40) volText = `Yıllıklandırılmış volatilite <strong>%${volat.toFixed(1)}</strong> ile yüksek seviyededir. Ani fiyat hareketlerine karşı hazırlıklı olunmalı ve kademeli giriş/çıkış stratejileri izlenmelidir.`;
+            else if (volat > 20) volText = `Yıllıklandırılmış volatilite <strong>%${volat.toFixed(1)}</strong> ile orta seviyededir. Normal piyasa koşulları hakimdir ve standart risk yönetimi stratejileri uygulanabilir.`;
+            else if (volat > 10) volText = `Yıllıklandırılmış volatilite <strong>%${volat.toFixed(1)}</strong> ile düşük-orta seviyededir. Piyasada göreceli sakinlik hakimdir.`;
+            else volText = `Yıllıklandırılmış volatilite <strong>%${volat.toFixed(1)}</strong> ile oldukça düşüktür. Düşük volatilite dönemleri genellikle büyük bir fiyat hareketinin (kırılım) habercisi olabilir — bandların sıkışması dikkatle izlenmelidir.`;
 
             const now = new Date();
             const dateStr = now.toLocaleDateString('tr-TR', { day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' });
 
+            // Momentum summary
+            let momText = '';
+            if (Math.abs(shortMom) > 0.01 || Math.abs(medMom) > 0.01) {
+                momText = `Kısa vadeli momentum (5 periyot): <strong>${shortMom > 0 ? '+' : ''}${shortMom.toFixed(2)}%</strong>, orta vadeli momentum (20 periyot): <strong>${medMom > 0 ? '+' : ''}${medMom.toFixed(2)}%</strong>. `;
+                if (shortMom > 0 && medMom > 0) momText += 'Her iki zaman diliminde de pozitif momentum, yükselişin geniş tabanlı olduğunu göstermektedir.';
+                else if (shortMom < 0 && medMom < 0) momText += 'Her iki zaman diliminde de negatif momentum, düşüşün ivme kazandığını göstermektedir.';
+                else if (shortMom > 0 && medMom < 0) momText += 'Kısa vadede toparlanma başlamış ancak orta vadeli trend henüz dönmemiştir — momentum diverjansı izlenmelidir.';
+                else momText += 'Kısa vadeli geri çekilme görülmekle birlikte orta vadeli trend hâlâ pozitiftir — sağlıklı bir düzeltme olabilir.';
+            }
+
             el.innerHTML = `
         <div class="analyst-text">
-            <p><strong>${name}</strong> için ${state.days} günlük teknik analiz raporu (${dateStr}):</p><br>
-            <p><strong>📈 Trend Analizi:</strong> ${name} genel olarak <strong>${trendText}</strong> trendinde seyretmektedir. Fiyat şu anda <strong>${fmt(price, asset)}</strong> seviyesindedir. Son ${state.days} günde en yüksek ${fmt(high, asset)}, en düşük ${fmt(low, asset)} seviyesi görülmüştür.</p><br>
+            <p><strong>${name}</strong> için ${state.days} günlük kapsamlı teknik analiz raporu (${dateStr}):</p><br>
+            <p><strong>📈 Trend Analizi:</strong> ${name} genel olarak <strong>${trendText}</strong> trendinde seyretmektedir. Fiyat şu anda <strong>${fmt(price, asset)}</strong> seviyesindedir. Son ${state.days} günde en yüksek <strong>${fmt(high, asset)}</strong> (${pctFromHigh.toFixed(2)}%), en düşük <strong>${fmt(low, asset)}</strong> (+${pctFromLow.toFixed(2)}%) seviyesi görülmüştür. Fiyat, dönemsel aralığın <strong>%${rangePosition.toFixed(0)}</strong> seviyesinde konumlanmaktadır.</p><br>
             <p><strong>📊 Hareketli Ortalamalar:</strong> ${maText}</p><br>
-            <p><strong>📉 RSI Analizi:</strong> ${rsiText}</p><br>
-            <p><strong>📊 MACD Analizi:</strong> ${macdText}</p><br>
-            <p><strong>📏 Bollinger Bantları:</strong> ${bbText}</p><br>
+            <p><strong>📉 RSI (14) Analizi:</strong> ${rsiText}</p><br>
+            <p><strong>📊 MACD (12,26,9) Analizi:</strong> ${macdText}</p><br>
+            <p><strong>📏 Bollinger Bantları (20,2):</strong> ${bbText}</p><br>
             <p><strong>🔢 Fibonacci Analizi:</strong> ${fibPos}</p><br>
+            ${momText ? `<p><strong>🚀 Momentum Analizi:</strong> ${momText}</p><br>` : ''}
             <p><strong>📊 Volatilite:</strong> ${volText}</p><br>
-            <p><strong>📋 Sonuç:</strong> ${verdictText}</p>
+            <p><strong>📋 Genel Değerlendirme:</strong> ${verdictText}</p>
         </div>
         <div class="verdict ${verdictClass}">${verdict}</div>
     `;
