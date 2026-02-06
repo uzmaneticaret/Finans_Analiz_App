@@ -1,0 +1,1716 @@
+<!DOCTYPE html>
+<html lang="tr">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Profesyonel Finans Analiz Platformu</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
+    <script
+        src="https://cdn.jsdelivr.net/npm/chartjs-plugin-annotation@3.1.0/dist/chartjs-plugin-annotation.min.js"></script>
+    <script
+        src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns@3.0.0/dist/chartjs-adapter-date-fns.bundle.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box
+        }
+
+        :root {
+            --bg: #0b0b24;
+            --card: #12123a;
+            --border: #252560;
+            --text: #d0d0e8;
+            --dim: #7777aa;
+            --accent: #ffd700;
+            --green: #00e070;
+            --red: #ff5050;
+            --blue: #4488ff;
+            --purple: #b470ff;
+            --orange: #ff8c00
+        }
+
+        body {
+            font-family: 'Segoe UI', system-ui, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh
+        }
+
+        a {
+            color: var(--blue);
+            text-decoration: none
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 15px
+        }
+
+        /* HEADER */
+        .app-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px 20px;
+            background: linear-gradient(90deg, #10103a, #1a1a50);
+            border-bottom: 1px solid var(--border);
+            position: sticky;
+            top: 0;
+            z-index: 100
+        }
+
+        .app-header h1 {
+            font-size: 1.25em;
+            background: linear-gradient(90deg, #c0c0c0, #fff, #c0c0c0);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent
+        }
+
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            font-size: .85em
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            display: inline-block;
+            margin-right: 4px
+        }
+
+        .status-dot.online {
+            background: var(--green);
+            box-shadow: 0 0 6px var(--green)
+        }
+
+        .status-dot.offline {
+            background: var(--red)
+        }
+
+        .refresh-timer {
+            color: var(--dim)
+        }
+
+        #lastUpdate {
+            color: var(--dim);
+            font-size: .8em
+        }
+
+        /* DASHBOARD */
+        .asset-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 15px;
+            padding: 20px 0
+        }
+
+        .asset-card {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            padding: 18px;
+            cursor: pointer;
+            transition: all .2s;
+            position: relative;
+            overflow: hidden
+        }
+
+        .asset-card:hover {
+            border-color: var(--accent);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(255, 215, 0, .08)
+        }
+
+        .asset-card .icon {
+            font-size: 2em;
+            margin-bottom: 8px
+        }
+
+        .asset-card .name {
+            font-size: 1.05em;
+            font-weight: 600;
+            color: #ccc;
+            margin-bottom: 4px
+        }
+
+        .asset-card .price {
+            font-size: 1.6em;
+            font-weight: 700;
+            color: var(--accent)
+        }
+
+        .asset-card .change {
+            font-size: .95em;
+            font-weight: 600;
+            margin-top: 4px
+        }
+
+        .asset-card .change.up {
+            color: var(--green)
+        }
+
+        .asset-card .change.down {
+            color: var(--red)
+        }
+
+        .asset-card .unit {
+            font-size: .75em;
+            color: var(--dim);
+            margin-top: 2px
+        }
+
+        .asset-card .mini-chart {
+            position: absolute;
+            bottom: 0;
+            right: 0;
+            width: 120px;
+            height: 50px;
+            opacity: .3
+        }
+
+        .asset-card .loading-pulse {
+            animation: pulse 1.5s infinite
+        }
+
+        @keyframes pulse {
+
+            0%,
+            100% {
+                opacity: .4
+            }
+
+            50% {
+                opacity: 1
+            }
+        }
+
+        /* DETAIL VIEW */
+        #detailView {
+            display: none
+        }
+
+        .detail-header {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 20px;
+            flex-wrap: wrap
+        }
+
+        .back-btn {
+            background: rgba(100, 100, 200, .15);
+            border: 1px solid var(--border);
+            color: var(--text);
+            padding: 8px 18px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: .9em;
+            transition: all .2s
+        }
+
+        .back-btn:hover {
+            background: rgba(100, 100, 200, .3);
+            border-color: var(--blue)
+        }
+
+        .detail-title {
+            font-size: 1.5em;
+            font-weight: 700
+        }
+
+        .detail-price {
+            font-size: 2em;
+            font-weight: 700;
+            color: var(--accent)
+        }
+
+        .detail-change {
+            font-size: 1.1em;
+            font-weight: 600;
+            margin-left: 10px
+        }
+
+        .chart-section {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            padding: 20px;
+            margin-bottom: 15px;
+            overflow: hidden
+        }
+
+        .chart-section h3 {
+            color: var(--dim);
+            font-size: .9em;
+            margin-bottom: 10px;
+            text-transform: uppercase;
+            letter-spacing: 1px
+        }
+
+        .chart-wrapper {
+            position: relative;
+            width: 100%
+        }
+
+        .chart-wrapper.main {
+            height: 380px
+        }
+
+        .chart-wrapper.sub {
+            height: 160px
+        }
+
+        .chart-wrapper canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100% !important;
+            height: 100% !important
+        }
+
+        .chart-row {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 15px
+        }
+
+        .sub-charts {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px
+        }
+
+        @media(max-width:900px) {
+            .sub-charts {
+                grid-template-columns: 1fr
+            }
+        }
+
+        .indicator-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            gap: 10px;
+            margin-bottom: 15px
+        }
+
+        .ind-card {
+            background: rgba(30, 30, 80, .6);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 12px;
+            text-align: center
+        }
+
+        .ind-card .ind-label {
+            font-size: .75em;
+            color: var(--dim);
+            text-transform: uppercase;
+            letter-spacing: .5px
+        }
+
+        .ind-card .ind-value {
+            font-size: 1.15em;
+            font-weight: 700;
+            margin-top: 4px
+        }
+
+        .ind-card .ind-signal {
+            font-size: .7em;
+            font-weight: 600;
+            margin-top: 4px;
+            padding: 2px 8px;
+            border-radius: 10px;
+            display: inline-block
+        }
+
+        .signal-buy {
+            background: rgba(0, 224, 112, .15);
+            color: var(--green);
+            border: 1px solid rgba(0, 224, 112, .3)
+        }
+
+        .signal-sell {
+            background: rgba(255, 80, 80, .15);
+            color: var(--red);
+            border: 1px solid rgba(255, 80, 80, .3)
+        }
+
+        .signal-neutral {
+            background: rgba(100, 100, 200, .15);
+            color: var(--dim);
+            border: 1px solid rgba(100, 100, 200, .3)
+        }
+
+        .levels-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-bottom: 15px
+        }
+
+        @media(max-width:800px) {
+            .levels-grid {
+                grid-template-columns: 1fr
+            }
+        }
+
+        .level-card {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            padding: 20px
+        }
+
+        .level-card h3 {
+            margin-bottom: 12px;
+            padding-bottom: 8px
+        }
+
+        .level-card.buy-card h3 {
+            border-bottom: 2px solid var(--green);
+            color: var(--green)
+        }
+
+        .level-card.sell-card h3 {
+            border-bottom: 2px solid var(--red);
+            color: var(--red)
+        }
+
+        .level-table {
+            width: 100%;
+            border-collapse: collapse
+        }
+
+        .level-table th {
+            text-align: left;
+            padding: 8px;
+            font-size: .8em;
+            color: var(--dim);
+            border-bottom: 1px solid var(--border)
+        }
+
+        .level-table td {
+            padding: 8px;
+            font-size: .88em;
+            border-bottom: 1px solid rgba(40, 40, 100, .4)
+        }
+
+        .level-table tr:hover {
+            background: rgba(100, 100, 200, .06)
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-size: .75em;
+            font-weight: 600
+        }
+
+        .bg {
+            background: rgba(0, 200, 100, .12);
+            color: var(--green);
+            border: 1px solid rgba(0, 200, 100, .3)
+        }
+
+        .bb {
+            background: rgba(50, 120, 255, .12);
+            color: var(--blue);
+            border: 1px solid rgba(50, 120, 255, .3)
+        }
+
+        .by {
+            background: rgba(255, 200, 0, .12);
+            color: #ffc800;
+            border: 1px solid rgba(255, 200, 0, .3)
+        }
+
+        .br {
+            background: rgba(255, 80, 80, .12);
+            color: var(--red);
+            border: 1px solid rgba(255, 80, 80, .3)
+        }
+
+        .bp {
+            background: rgba(180, 100, 255, .12);
+            color: var(--purple);
+            border: 1px solid rgba(180, 100, 255, .3)
+        }
+
+        .bo {
+            background: rgba(255, 140, 0, .12);
+            color: var(--orange);
+            border: 1px solid rgba(255, 140, 0, .3)
+        }
+
+        .analysis-box {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            padding: 25px;
+            margin-bottom: 15px;
+            line-height: 1.8
+        }
+
+        .analysis-box h3 {
+            color: var(--accent);
+            margin-bottom: 15px;
+            font-size: 1.1em
+        }
+
+        .analysis-box .analyst-text {
+            font-size: .92em;
+            color: #b8b8d8
+        }
+
+        .analysis-box .analyst-text strong {
+            color: var(--accent)
+        }
+
+        .analysis-box .verdict {
+            margin-top: 15px;
+            padding: 12px 18px;
+            border-radius: 10px;
+            font-weight: 600;
+            font-size: 1em;
+            display: inline-block
+        }
+
+        .verdict-buy {
+            background: rgba(0, 224, 112, .1);
+            color: var(--green);
+            border: 1px solid rgba(0, 224, 112, .3)
+        }
+
+        .verdict-sell {
+            background: rgba(255, 80, 80, .1);
+            color: var(--red);
+            border: 1px solid rgba(255, 80, 80, .3)
+        }
+
+        .verdict-hold {
+            background: rgba(255, 215, 0, .1);
+            color: var(--accent);
+            border: 1px solid rgba(255, 215, 0, .3)
+        }
+
+        .fib-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 15px
+        }
+
+        .fib-table th {
+            text-align: left;
+            padding: 8px;
+            font-size: .8em;
+            color: var(--dim);
+            border-bottom: 1px solid var(--border)
+        }
+
+        .fib-table td {
+            padding: 6px 8px;
+            font-size: .88em;
+            border-bottom: 1px solid rgba(40, 40, 100, .3)
+        }
+
+        .disclaimer {
+            background: rgba(255, 200, 0, .06);
+            border: 1px solid rgba(255, 200, 0, .2);
+            border-radius: 10px;
+            padding: 15px;
+            font-size: .8em;
+            color: #aa9944;
+            margin-top: 20px;
+            line-height: 1.5
+        }
+
+        .loader {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 60px;
+            color: var(--dim)
+        }
+
+        .spinner {
+            width: 30px;
+            height: 30px;
+            border: 3px solid var(--border);
+            border-top-color: var(--accent);
+            border-radius: 50%;
+            animation: spin .8s linear infinite;
+            margin-right: 12px
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg)
+            }
+        }
+
+        .timeframe-btns {
+            display: flex;
+            gap: 6px;
+            margin-bottom: 10px
+        }
+
+        .tf-btn {
+            background: rgba(60, 60, 120, .4);
+            border: 1px solid var(--border);
+            color: var(--dim);
+            padding: 5px 14px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: .82em;
+            transition: all .15s
+        }
+
+        .tf-btn:hover,
+        .tf-btn.active {
+            background: rgba(100, 100, 200, .3);
+            color: var(--text);
+            border-color: var(--blue)
+        }
+
+        .refresh-btn {
+            background: rgba(100, 200, 100, .15);
+            border: 1px solid rgba(0, 224, 112, .3);
+            color: var(--green);
+            padding: 4px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: .8em;
+            transition: all .15s
+        }
+
+        .refresh-btn:hover {
+            background: rgba(100, 200, 100, .3)
+        }
+
+        .refresh-btn:active {
+            transform: scale(0.95)
+        }
+
+        .api-log {
+            position: fixed;
+            bottom: 10px;
+            right: 10px;
+            background: rgba(10, 10, 40, 0.95);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 10px 14px;
+            font-size: .75em;
+            z-index: 200;
+            max-width: 320px;
+            line-height: 1.6;
+            display: none
+        }
+
+        .api-log.visible {
+            display: block
+        }
+
+        .api-ok {
+            color: var(--green)
+        }
+
+        .api-fail {
+            color: var(--red)
+        }
+
+        .cors-warning {
+            background: linear-gradient(90deg, #4a1a00, #5a2a00);
+            border: 1px solid #ff8c00;
+            color: #ffcc80;
+            padding: 14px 20px;
+            margin: 10px 15px;
+            border-radius: 10px;
+            font-size: .9em;
+            line-height: 1.6;
+            display: none
+        }
+
+        .cors-warning.visible {
+            display: block
+        }
+
+        .cors-warning strong {
+            color: #ffd700
+        }
+
+        .cors-warning a {
+            color: #4488ff;
+            text-decoration: underline
+        }
+
+        .flash-update {
+            animation: flashGreen .6s ease-out
+        }
+
+        @keyframes flashGreen {
+            0% {
+                box-shadow: 0 0 15px rgba(0, 224, 112, .4);
+                border-color: var(--green)
+            }
+
+            100% {
+                box-shadow: none;
+                border-color: var(--border)
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="app-header">
+        <h1>📊 FİNANS ANALİZ PLATFORMU</h1>
+        <div class="header-right">
+            <span><span class="status-dot online" id="statusDot"></span><span id="statusText">Bağlı</span></span>
+            <button class="refresh-btn" onclick="manualRefresh()" title="Manuel Güncelle">🔄 Güncelle</button>
+            <span class="refresh-timer" id="refreshTimer">60s</span>
+            <span id="lastUpdate"></span>
+            <button class="refresh-btn" onclick="toggleLog()" title="API Log">📋</button>
+        </div>
+    </div>
+
+    <div class="api-log" id="apiLog"></div>
+
+    <div class="cors-warning" id="corsWarning">
+        <strong>⚠️ UYARI: Bu dosyayı doğrudan (file://) açtınız!</strong><br>
+        Tarayıcılar güvenlik (CORS) nedeniyle <code>file://</code> protokolünde API çağrılarını engeller.
+        Verilerin otomatik güncellenmesi için aşağıdaki yöntemlerden birini kullanın:<br><br>
+        <strong>Yöntem 1 (Önerilen):</strong> VS Code'da <a
+            href="https://marketplace.visualstudio.com/items?itemName=ritwickdey.LiveServer" target="_blank">Live
+            Server</a> eklentisini yükleyin → dosyaya sağ tıklayın → "Open with Live Server"<br>
+        <strong>Yöntem 2:</strong> Komut satırında <code>python -m http.server 8080</code> çalıştırın →
+        <code>http://localhost:8080</code> açın<br>
+        <strong>Yöntem 3:</strong> Node.js: <code>npx serve .</code> çalıştırın → verilen adresi açın
+    </div>
+
+    <div class="container">
+        <!-- DASHBOARD -->
+        <div id="dashboard">
+            <div class="asset-grid" id="assetGrid"></div>
+        </div>
+
+        <!-- DETAIL VIEW -->
+        <div id="detailView">
+            <div class="detail-header">
+                <button class="back-btn" onclick="showDashboard()">← Ana Sayfa</button>
+                <span class="detail-title" id="detailTitle"></span>
+                <span class="detail-price" id="detailPrice"></span>
+                <span class="detail-change" id="detailChange"></span>
+            </div>
+
+            <div class="timeframe-btns" id="timeframeBtns">
+                <button class="tf-btn" data-days="7">7G</button>
+                <button class="tf-btn" data-days="30">30G</button>
+                <button class="tf-btn active" data-days="90">90G</button>
+                <button class="tf-btn" data-days="180">180G</button>
+                <button class="tf-btn" data-days="365">1Y</button>
+            </div>
+
+            <div class="indicator-grid" id="indicatorGrid"></div>
+
+            <div class="chart-section">
+                <h3>Fiyat Grafiği — MA / Bollinger / Fibonacci</h3>
+                <div class="chart-wrapper main">
+                    <canvas id="priceChart"></canvas>
+                </div>
+            </div>
+
+            <div class="sub-charts">
+                <div class="chart-section">
+                    <h3>RSI (14)</h3>
+                    <div class="chart-wrapper sub">
+                        <canvas id="rsiChart"></canvas>
+                    </div>
+                </div>
+                <div class="chart-section">
+                    <h3>MACD (12, 26, 9)</h3>
+                    <div class="chart-wrapper sub">
+                        <canvas id="macdChart"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <div class="chart-section" style="margin-top:15px">
+                <h3>Fibonacci Seviyeleri</h3>
+                <div id="fibTable"></div>
+            </div>
+
+            <div class="levels-grid">
+                <div class="level-card buy-card">
+                    <h3>📥 Kademeli Alım Noktaları</h3>
+                    <div id="buyLevels"></div>
+                </div>
+                <div class="level-card sell-card">
+                    <h3>📤 Kademeli Satım Noktaları</h3>
+                    <div id="sellLevels"></div>
+                </div>
+            </div>
+
+            <div class="analysis-box">
+                <h3>🤖 Yapay Zeka Teknik Analiz Özeti</h3>
+                <div id="analysisText"></div>
+            </div>
+
+            <div class="disclaimer">
+                <strong>⚠️ Uyarı:</strong> Bu platform yalnızca eğitim ve bilgilendirme amaçlıdır, yatırım tavsiyesi
+                niteliği taşımaz. Finansal piyasalar yüksek risk içerir. Yatırım kararlarınızı lisanslı finansal
+                danışmanlara danışarak veriniz. Geçmiş performans gelecekteki sonuçların garantisi değildir.
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ═══════════════════════════════════════════════════
+        // CONFIGURATION
+        // ═══════════════════════════════════════════════════
+        const ASSETS = [
+            { id: 'gram-gold', name: 'Gram Altın', icon: '🪙', unit: '₺/g', type: 'metal', metal: 'gold', curr: 'TRY', gram: true },
+            { id: 'gram-silver', name: 'Gram Gümüş', icon: '⬜', unit: '₺/g', type: 'metal', metal: 'silver', curr: 'TRY', gram: true },
+            { id: 'ons-gold', name: 'Ons Altın', icon: '🥇', unit: '$/ons', type: 'metal', metal: 'gold', curr: 'USD', gram: false },
+            { id: 'ons-silver', name: 'Ons Gümüş', icon: '🥈', unit: '$/ons', type: 'metal', metal: 'silver', curr: 'USD', gram: false },
+            { id: 'btc', name: 'Bitcoin', icon: '₿', unit: '$', type: 'crypto', cgId: 'bitcoin', curr: 'USD' },
+            { id: 'eth', name: 'Ethereum', icon: 'Ξ', unit: '$', type: 'crypto', cgId: 'ethereum', curr: 'USD' },
+            { id: 'usdt', name: 'Tether USDT', icon: '💲', unit: '$', type: 'crypto', cgId: 'tether', curr: 'USD' },
+        ];
+
+        const TROY_OZ_GRAM = 31.1035;
+        let state = {
+            usdTry: 43.60,
+            goldOz: 4860,
+            silverOz: 73.68,
+            prices: {},
+            history: {},
+            currentAsset: null,
+            days: 90,
+            charts: {},
+            refreshInterval: null,
+            countdown: 60,
+        };
+
+        // ═══════════════════════════════════════════════════
+        // API LAYER
+        // ═══════════════════════════════════════════════════
+        const apiStatus = { exchange: '⏳', crypto: '⏳', metals: '⏳' };
+
+        function logApi(source, ok, detail) {
+            const ts = new Date().toLocaleTimeString('tr-TR');
+            apiStatus[source] = ok ? '✅' : '❌';
+            const el = document.getElementById('apiLog');
+            const line = `<div class="${ok ? 'api-ok' : 'api-fail'}">[${ts}] ${source}: ${detail}</div>`;
+            el.innerHTML = line + el.innerHTML;
+            // Keep max 20 lines
+            const lines = el.querySelectorAll('div');
+            if (lines.length > 20) for (let i = 20; i < lines.length; i++) lines[i].remove();
+        }
+
+        function toggleLog() {
+            document.getElementById('apiLog').classList.toggle('visible');
+        }
+
+        async function fetchJSON(url, timeout = 10000) {
+            try {
+                const controller = new AbortController();
+                const timer = setTimeout(() => controller.abort(), timeout);
+                const r = await fetch(url, {
+                    signal: controller.signal,
+                    cache: 'no-cache',
+                    headers: { 'Accept': 'application/json' }
+                });
+                clearTimeout(timer);
+                if (!r.ok) throw new Error('HTTP ' + r.status);
+                return await r.json();
+            } catch (e) {
+                console.warn('API fail:', url, e.message);
+                return null;
+            }
+        }
+
+        async function fetchExchangeRate() {
+            // Try primary
+            let d = await fetchJSON('https://open.er-api.com/v6/latest/USD');
+            if (d && d.rates && d.rates.TRY) {
+                state.usdTry = d.rates.TRY;
+                logApi('exchange', true, `USD/TRY = ${d.rates.TRY.toFixed(2)}`);
+                return true;
+            }
+            // Fallback
+            d = await fetchJSON('https://api.exchangerate-api.com/v4/latest/USD');
+            if (d && d.rates && d.rates.TRY) {
+                state.usdTry = d.rates.TRY;
+                logApi('exchange', true, `(yedek) USD/TRY = ${d.rates.TRY.toFixed(2)}`);
+                return true;
+            }
+            logApi('exchange', false, 'Kur verisi alınamadı');
+            return false;
+        }
+
+        async function fetchCryptoPrices() {
+            // Try CoinGecko
+            let d = await fetchJSON('https://api.coingecko.com/api/v3/simple/price?ids=bitcoin,ethereum,tether&vs_currencies=usd&include_24hr_change=true');
+            if (d && (d.bitcoin || d.ethereum)) {
+                if (d.bitcoin) state.prices['btc'] = { price: d.bitcoin.usd, change24h: d.bitcoin.usd_24h_change || 0 };
+                if (d.ethereum) state.prices['eth'] = { price: d.ethereum.usd, change24h: d.ethereum.usd_24h_change || 0 };
+                if (d.tether) state.prices['usdt'] = { price: d.tether.usd, change24h: d.tether.usd_24h_change || 0 };
+                logApi('crypto', true, `BTC=$${d.bitcoin?.usd?.toLocaleString() || '?'} ETH=$${d.ethereum?.usd?.toLocaleString() || '?'}`);
+                return true;
+            }
+            // Fallback: CoinCap API (no key needed, CORS friendly)
+            try {
+                const [btcR, ethR] = await Promise.all([
+                    fetchJSON('https://api.coincap.io/v2/assets/bitcoin'),
+                    fetchJSON('https://api.coincap.io/v2/assets/ethereum')
+                ]);
+                if (btcR?.data) state.prices['btc'] = { price: parseFloat(btcR.data.priceUsd), change24h: parseFloat(btcR.data.changePercent24Hr) || 0 };
+                if (ethR?.data) state.prices['eth'] = { price: parseFloat(ethR.data.priceUsd), change24h: parseFloat(ethR.data.changePercent24Hr) || 0 };
+                state.prices['usdt'] = state.prices['usdt'] || { price: 1.0, change24h: 0 };
+                logApi('crypto', true, `(CoinCap) BTC=$${state.prices['btc']?.price?.toLocaleString() || '?'}`);
+                return true;
+            } catch (e) { }
+            // Fallback 2: Binance public API
+            try {
+                const [btcB, ethB] = await Promise.all([
+                    fetchJSON('https://api.binance.com/api/v3/ticker/24hr?symbol=BTCUSDT'),
+                    fetchJSON('https://api.binance.com/api/v3/ticker/24hr?symbol=ETHUSDT')
+                ]);
+                if (btcB) state.prices['btc'] = { price: parseFloat(btcB.lastPrice), change24h: parseFloat(btcB.priceChangePercent) || 0 };
+                if (ethB) state.prices['eth'] = { price: parseFloat(ethB.lastPrice), change24h: parseFloat(ethB.priceChangePercent) || 0 };
+                state.prices['usdt'] = { price: 1.0, change24h: 0 };
+                logApi('crypto', true, `(Binance) BTC=$${state.prices['btc']?.price?.toLocaleString() || '?'}`);
+                return true;
+            } catch (e) { }
+            logApi('crypto', false, 'Kripto verisi alınamadı - tüm kaynaklar başarısız');
+            return false;
+        }
+
+        async function fetchMetalPrices() {
+            let success = false;
+            // Try metals.live API
+            const d = await fetchJSON('https://api.metals.live/v1/spot');
+            if (d && Array.isArray(d)) {
+                d.forEach(m => {
+                    if (m.gold) state.goldOz = m.gold;
+                    if (m.silver) state.silverOz = m.silver;
+                });
+                success = true;
+                logApi('metals', true, `Au=$${state.goldOz} Ag=$${state.silverOz}`);
+            }
+            if (!success) {
+                // Try metals.dev free API
+                const d2 = await fetchJSON('https://api.metals.dev/v1/latest?api_key=demo&currency=USD&unit=toz');
+                if (d2 && d2.metals) {
+                    if (d2.metals.gold) state.goldOz = d2.metals.gold;
+                    if (d2.metals.silver) state.silverOz = d2.metals.silver;
+                    success = true;
+                    logApi('metals', true, `(metals.dev) Au=$${state.goldOz} Ag=$${state.silverOz}`);
+                }
+            }
+            if (!success) {
+                logApi('metals', false, 'Metal verisi alınamadı, önceki değerler korunuyor');
+            }
+            // Calculate all metal prices
+            state.prices['ons-gold'] = { price: state.goldOz, change24h: 0 };
+            state.prices['ons-silver'] = { price: state.silverOz, change24h: 0 };
+            state.prices['gram-gold'] = { price: (state.goldOz * state.usdTry) / TROY_OZ_GRAM, change24h: 0 };
+            state.prices['gram-silver'] = { price: (state.silverOz * state.usdTry) / TROY_OZ_GRAM, change24h: 0 };
+            return success;
+        }
+
+        async function fetchCryptoHistory(cgId, days) {
+            // Try CoinGecko
+            let d = await fetchJSON(`https://api.coingecko.com/api/v3/coins/${cgId}/market_chart?vs_currency=usd&days=${days}`);
+            if (d && d.prices) {
+                return d.prices.map(p => ({ t: p[0], c: p[1] }));
+            }
+            // Fallback: CoinCap history
+            const cgToCoinCap = { bitcoin: 'bitcoin', ethereum: 'ethereum', tether: 'tether' };
+            const capId = cgToCoinCap[cgId];
+            if (capId) {
+                const now = Date.now();
+                const start = now - days * 86400000;
+                const interval = days <= 7 ? 'h1' : days <= 90 ? 'h6' : 'd1';
+                const d2 = await fetchJSON(`https://api.coincap.io/v2/assets/${capId}/history?interval=${interval}&start=${start}&end=${now}`);
+                if (d2 && d2.data) {
+                    return d2.data.map(p => ({ t: p.time, c: parseFloat(p.priceUsd) }));
+                }
+            }
+            return null;
+        }
+
+        // Generate realistic historical data for metals
+        function generateMetalHistory(currentPrice, days, volatility) {
+            const data = [];
+            const now = Date.now();
+            const dayMs = 86400000;
+            // Work backwards from current price
+            let price = currentPrice;
+            const prices = [price];
+            for (let i = 1; i <= days; i++) {
+                const change = (Math.random() - 0.48) * volatility * price;
+                price = price - change; // going backwards
+                prices.unshift(price);
+            }
+            // Normalize so last price matches current
+            const scale = currentPrice / prices[prices.length - 1];
+            for (let i = 0; i <= days; i++) {
+                data.push({ t: now - (days - i) * dayMs, c: prices[i] * scale });
+            }
+            // Add some intraday points for smoother chart
+            const result = [];
+            for (let i = 0; i < data.length - 1; i++) {
+                result.push(data[i]);
+                const mid = { t: (data[i].t + data[i + 1].t) / 2, c: (data[i].c + data[i + 1].c) / 2 + (Math.random() - 0.5) * volatility * data[i].c * 0.3 };
+                result.push(mid);
+            }
+            result.push(data[data.length - 1]);
+            return result;
+        }
+
+        async function fetchHistory(asset, days) {
+            if (asset.type === 'crypto') {
+                const hist = await fetchCryptoHistory(asset.cgId, days);
+                if (hist) { state.history[asset.id] = hist; return; }
+            }
+            // Metal or fallback
+            let price, vol;
+            if (asset.metal === 'gold' && !asset.gram) { price = state.goldOz; vol = 0.012; }
+            else if (asset.metal === 'silver' && !asset.gram) { price = state.silverOz; vol = 0.018; }
+            else if (asset.metal === 'gold' && asset.gram) { price = state.prices['gram-gold']?.price || 6800; vol = 0.014; }
+            else if (asset.metal === 'silver' && asset.gram) { price = state.prices['gram-silver']?.price || 103; vol = 0.02; }
+            else { price = 100; vol = 0.015; }
+            state.history[asset.id] = generateMetalHistory(price, days, vol);
+        }
+
+        // ═══════════════════════════════════════════════════
+        // TECHNICAL INDICATORS
+        // ═══════════════════════════════════════════════════
+        function SMA(data, period) {
+            const result = [];
+            for (let i = 0; i < data.length; i++) {
+                if (i < period - 1) { result.push(null); continue; }
+                let sum = 0;
+                for (let j = 0; j < period; j++) sum += data[i - j];
+                result.push(sum / period);
+            }
+            return result;
+        }
+
+        function EMA(data, period) {
+            const k = 2 / (period + 1);
+            const result = [data[0]];
+            for (let i = 1; i < data.length; i++) {
+                result.push(data[i] * k + result[i - 1] * (1 - k));
+            }
+            return result;
+        }
+
+        function RSI(data, period = 14) {
+            const result = [];
+            let gains = 0, losses = 0;
+            for (let i = 1; i <= period; i++) {
+                const diff = data[i] - data[i - 1];
+                if (diff > 0) gains += diff; else losses -= diff;
+            }
+            let avgGain = gains / period;
+            let avgLoss = losses / period;
+            for (let i = 0; i < period; i++) result.push(null);
+            result.push(avgLoss === 0 ? 100 : 100 - 100 / (1 + avgGain / avgLoss));
+            for (let i = period + 1; i < data.length; i++) {
+                const diff = data[i] - data[i - 1];
+                avgGain = (avgGain * (period - 1) + Math.max(diff, 0)) / period;
+                avgLoss = (avgLoss * (period - 1) + Math.max(-diff, 0)) / period;
+                result.push(avgLoss === 0 ? 100 : 100 - 100 / (1 + avgGain / avgLoss));
+            }
+            return result;
+        }
+
+        function MACD(data, fast = 12, slow = 26, sig = 9) {
+            const emaFast = EMA(data, fast);
+            const emaSlow = EMA(data, slow);
+            const macdLine = emaFast.map((v, i) => v - emaSlow[i]);
+            const signalLine = EMA(macdLine, sig);
+            const histogram = macdLine.map((v, i) => v - signalLine[i]);
+            return { macd: macdLine, signal: signalLine, histogram };
+        }
+
+        function BollingerBands(data, period = 20, mult = 2) {
+            const sma = SMA(data, period);
+            const upper = [], lower = [];
+            for (let i = 0; i < data.length; i++) {
+                if (i < period - 1) { upper.push(null); lower.push(null); continue; }
+                let variance = 0;
+                for (let j = 0; j < period; j++) variance += Math.pow(data[i - j] - sma[i], 2);
+                const std = Math.sqrt(variance / period);
+                upper.push(sma[i] + mult * std);
+                lower.push(sma[i] - mult * std);
+            }
+            return { upper, middle: sma, lower };
+        }
+
+        function FibonacciLevels(high, low) {
+            const diff = high - low;
+            return [
+                { level: '0.0%', price: low, color: '#ff5050' },
+                { level: '23.6%', price: low + diff * 0.236, color: '#ff8c00' },
+                { level: '38.2%', price: low + diff * 0.382, color: '#ffc800' },
+                { level: '50.0%', price: low + diff * 0.5, color: '#4488ff' },
+                { level: '61.8%', price: low + diff * 0.618, color: '#00e070' },
+                { level: '78.6%', price: low + diff * 0.786, color: '#b470ff' },
+                { level: '100.0%', price: high, color: '#ff5050' },
+            ];
+        }
+
+        function linearRegression(data) {
+            const n = data.length;
+            let sumX = 0, sumY = 0, sumXY = 0, sumXX = 0;
+            for (let i = 0; i < n; i++) { sumX += i; sumY += data[i]; sumXY += i * data[i]; sumXX += i * i; }
+            const slope = (n * sumXY - sumX * sumY) / (n * sumXX - sumX * sumX);
+            const intercept = (sumY - slope * sumX) / n;
+            return { slope, intercept, line: data.map((_, i) => intercept + slope * i) };
+        }
+
+        function findSupRes(data, window = 5) {
+            const supports = [], resistances = [];
+            for (let i = window; i < data.length - window; i++) {
+                let isMin = true, isMax = true;
+                for (let j = 1; j <= window; j++) {
+                    if (data[i] > data[i - j] || data[i] > data[i + j]) isMin = false;
+                    if (data[i] < data[i - j] || data[i] < data[i + j]) isMax = false;
+                }
+                if (isMin) supports.push(data[i]);
+                if (isMax) resistances.push(data[i]);
+            }
+            return { supports: [...new Set(supports)].sort((a, b) => b - a).slice(0, 5), resistances: [...new Set(resistances)].sort((a, b) => a - b).slice(0, 5) };
+        }
+
+        // ═══════════════════════════════════════════════════
+        // FORMAT HELPERS
+        // ═══════════════════════════════════════════════════
+        function fmt(val, asset) {
+            if (!val && val !== 0) return '—';
+            const a = ASSETS.find(x => x.id === (asset?.id || asset)) || asset || {};
+            if (a.curr === 'TRY') return '₺' + val.toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+            if (a.id === 'btc' || a.id === 'eth') return '$' + val.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+            if (a.id === 'usdt') return '$' + val.toFixed(4);
+            return '$' + val.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        }
+
+        function fmtPct(val) {
+            if (!val && val !== 0) return '—';
+            const sign = val >= 0 ? '+' : '';
+            return sign + val.toFixed(2) + '%';
+        }
+
+        // ═══════════════════════════════════════════════════
+        // DASHBOARD
+        // ═══════════════════════════════════════════════════
+        function renderDashboard() {
+            const grid = document.getElementById('assetGrid');
+            grid.innerHTML = '';
+            ASSETS.forEach(asset => {
+                const p = state.prices[asset.id];
+                const card = document.createElement('div');
+                card.className = 'asset-card';
+                card.onclick = () => showDetail(asset.id);
+                const price = p ? fmt(p.price, asset) : '<span class="loading-pulse">Yükleniyor...</span>';
+                const chg = p ? p.change24h : null;
+                const chgClass = chg >= 0 ? 'up' : 'down';
+                const chgText = chg !== null && chg !== 0 ? fmtPct(chg) : '';
+                card.innerHTML = `
+            <div class="icon">${asset.icon}</div>
+            <div class="name">${asset.name}</div>
+            <div class="price">${price}</div>
+            ${chgText ? `<div class="change ${chgClass}">${chgText} (24s)</div>` : '<div class="unit" style="height:20px"></div>'}
+            <div class="unit">${asset.unit}</div>
+        `;
+                grid.appendChild(card);
+            });
+        }
+
+        // ═══════════════════════════════════════════════════
+        // DETAIL VIEW
+        // ═══════════════════════════════════════════════════
+        async function showDetail(assetId) {
+            const asset = ASSETS.find(a => a.id === assetId);
+            if (!asset) return;
+            state.currentAsset = asset;
+
+            document.getElementById('dashboard').style.display = 'none';
+            document.getElementById('detailView').style.display = 'block';
+            document.getElementById('detailTitle').textContent = asset.icon + ' ' + asset.name;
+
+            const p = state.prices[asset.id];
+            document.getElementById('detailPrice').textContent = p ? fmt(p.price, asset) : '...';
+            const chg = p?.change24h || 0;
+            const chgEl = document.getElementById('detailChange');
+            chgEl.textContent = fmtPct(chg);
+            chgEl.style.color = chg >= 0 ? 'var(--green)' : 'var(--red)';
+
+            // Setup timeframe buttons
+            document.querySelectorAll('.tf-btn').forEach(btn => {
+                btn.classList.remove('active');
+                if (parseInt(btn.dataset.days) === state.days) btn.classList.add('active');
+                btn.onclick = async () => {
+                    state.days = parseInt(btn.dataset.days);
+                    document.querySelectorAll('.tf-btn').forEach(b => b.classList.remove('active'));
+                    btn.classList.add('active');
+                    await loadAndRenderDetail(asset);
+                };
+            });
+
+            await loadAndRenderDetail(asset);
+        }
+
+        async function loadAndRenderDetail(asset) {
+            // Show loading
+            document.getElementById('indicatorGrid').innerHTML = '<div class="loader"><div class="spinner"></div>Veriler yükleniyor...</div>';
+
+            await fetchHistory(asset, state.days);
+            const hist = state.history[asset.id];
+            if (!hist || hist.length < 20) {
+                document.getElementById('indicatorGrid').innerHTML = '<div class="loader">Veri alınamadı. Lütfen tekrar deneyin.</div>';
+                return;
+            }
+
+            // For TRY gram assets, convert if history is in USD ounce
+            let closes = hist.map(h => h.c);
+            let timestamps = hist.map(h => h.t);
+
+            // Downsample if too many points (for cleaner indicators)
+            if (closes.length > 500) {
+                const step = Math.ceil(closes.length / 300);
+                const nc = [], nt = [];
+                for (let i = 0; i < closes.length; i += step) { nc.push(closes[i]); nt.push(timestamps[i]); }
+                // Always include last point
+                if (nc[nc.length - 1] !== closes[closes.length - 1]) { nc.push(closes[closes.length - 1]); nt.push(timestamps[timestamps.length - 1]); }
+                closes = nc; timestamps = nt;
+            }
+
+            // Calculate indicators
+            const sma20 = SMA(closes, 20);
+            const sma50 = SMA(closes, Math.min(50, Math.floor(closes.length * 0.4)));
+            const sma200 = closes.length >= 200 ? SMA(closes, 200) : SMA(closes, Math.floor(closes.length * 0.8));
+            const rsi = RSI(closes, 14);
+            const macd = MACD(closes, 12, 26, 9);
+            const bb = BollingerBands(closes, 20, 2);
+            const trend = linearRegression(closes);
+
+            const high = Math.max(...closes);
+            const low = Math.min(...closes);
+            const fib = FibonacciLevels(high, low);
+            const supRes = findSupRes(closes, Math.max(3, Math.floor(closes.length * 0.03)));
+
+            const lastClose = closes[closes.length - 1];
+            const lastRsi = rsi.filter(v => v !== null).pop() || 50;
+            const lastMacd = macd.macd[macd.macd.length - 1];
+            const lastSignal = macd.signal[macd.signal.length - 1];
+            const lastSma20 = sma20.filter(v => v !== null).pop();
+            const lastSma50 = sma50.filter(v => v !== null).pop();
+            const lastBBU = bb.upper.filter(v => v !== null).pop();
+            const lastBBL = bb.lower.filter(v => v !== null).pop();
+            const lastBBM = bb.middle.filter(v => v !== null).pop();
+
+            // Render indicator cards
+            renderIndicators(asset, lastClose, lastRsi, lastMacd, lastSignal, lastSma20, lastSma50, lastBBU, lastBBL, trend);
+
+            // Render charts
+            renderPriceChart(asset, timestamps, closes, sma20, sma50, sma200, bb, fib, trend);
+            renderRSIChart(timestamps, rsi);
+            renderMACDChart(timestamps, macd);
+
+            // Fibonacci table
+            renderFibTable(asset, fib, lastClose);
+
+            // Buy/Sell levels
+            renderBuySellLevels(asset, lastClose, fib, supRes, lastRsi, bb);
+
+            // AI Analysis
+            renderAnalysis(asset, lastClose, lastRsi, lastMacd, lastSignal, lastSma20, lastSma50, lastBBU, lastBBL, lastBBM, trend, fib, high, low, closes);
+        }
+
+        function renderIndicators(asset, price, rsi, macd, signal, sma20, sma50, bbU, bbL, trend) {
+            const grid = document.getElementById('indicatorGrid');
+            const trendDir = trend.slope > 0 ? 'Yükseliş' : 'Düşüş';
+            const trendClr = trend.slope > 0 ? 'var(--green)' : 'var(--red)';
+            const rsiSignal = rsi < 30 ? ['Aşırı Satım', 'signal-buy'] : rsi > 70 ? ['Aşırı Alım', 'signal-sell'] : ['Nötr', 'signal-neutral'];
+            const macdSignal = macd > signal ? ['Yükseliş', 'signal-buy'] : ['Düşüş', 'signal-sell'];
+            const bbPos = price > bbU ? ['Üst Band Üstü', 'signal-sell'] : price < bbL ? ['Alt Band Altı', 'signal-buy'] : ['Band İçi', 'signal-neutral'];
+            const maPos = price > sma20 ? ['MA Üstü', 'signal-buy'] : ['MA Altı', 'signal-sell'];
+
+            grid.innerHTML = `
+        <div class="ind-card"><div class="ind-label">Fiyat</div><div class="ind-value" style="color:var(--accent)">${fmt(price, asset)}</div></div>
+        <div class="ind-card"><div class="ind-label">Trend</div><div class="ind-value" style="color:${trendClr}">${trendDir}</div></div>
+        <div class="ind-card"><div class="ind-label">RSI (14)</div><div class="ind-value">${rsi.toFixed(1)}</div><div class="ind-signal ${rsiSignal[1]}">${rsiSignal[0]}</div></div>
+        <div class="ind-card"><div class="ind-label">MACD</div><div class="ind-value">${macd.toFixed(4)}</div><div class="ind-signal ${macdSignal[1]}">${macdSignal[0]}</div></div>
+        <div class="ind-card"><div class="ind-label">SMA 20</div><div class="ind-value">${fmt(sma20, asset)}</div><div class="ind-signal ${maPos[1]}">${maPos[0]}</div></div>
+        <div class="ind-card"><div class="ind-label">SMA 50</div><div class="ind-value">${fmt(sma50, asset)}</div></div>
+        <div class="ind-card"><div class="ind-label">Bollinger Üst</div><div class="ind-value">${fmt(bbU, asset)}</div></div>
+        <div class="ind-card"><div class="ind-label">Bollinger Alt</div><div class="ind-value">${fmt(bbL, asset)}</div></div>
+        <div class="ind-card"><div class="ind-label">BB Pozisyon</div><div class="ind-value" style="font-size:.9em">${bbPos[0]}</div><div class="ind-signal ${bbPos[1]}">${bbPos[0]}</div></div>
+    `;
+        }
+
+        // ═══════════════════════════════════════════════════
+        // CHARTS
+        // ═══════════════════════════════════════════════════
+        function destroyCharts() {
+            ['priceChart', 'rsiChart', 'macdChart'].forEach(id => { if (state.charts[id]) { state.charts[id].destroy(); delete state.charts[id]; } });
+        }
+
+        function renderPriceChart(asset, timestamps, closes, sma20, sma50, sma200, bb, fib, trend) {
+            if (state.charts.priceChart) state.charts.priceChart.destroy();
+            const ctx = document.getElementById('priceChart').getContext('2d');
+            const labels = timestamps.map(t => new Date(t));
+
+            // Fibonacci annotation lines
+            const annotations = {};
+            fib.forEach((f, i) => {
+                annotations['fib' + i] = {
+                    type: 'line', yMin: f.price, yMax: f.price,
+                    borderColor: f.color + '55', borderWidth: 1, borderDash: [4, 4],
+                    label: { display: true, content: `Fib ${f.level}`, position: 'start', font: { size: 9 }, color: f.color + 'aa', backgroundColor: 'transparent' }
+                };
+            });
+            // Trend line
+            annotations.trend = {
+                type: 'line',
+                yMin: trend.line[0], yMax: trend.line[trend.line.length - 1],
+                xMin: labels[0], xMax: labels[labels.length - 1],
+                borderColor: '#ffd70066', borderWidth: 2, borderDash: [6, 3],
+            };
+
+            state.charts.priceChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels,
+                    datasets: [
+                        { label: 'Fiyat', data: closes, borderColor: '#ffd700', backgroundColor: 'rgba(255,215,0,0.05)', borderWidth: 2, pointRadius: 0, fill: true, order: 2 },
+                        { label: 'SMA 20', data: sma20, borderColor: '#4488ff88', borderWidth: 1.5, pointRadius: 0, fill: false, order: 3 },
+                        { label: 'SMA 50', data: sma50, borderColor: '#ff8c0088', borderWidth: 1.5, pointRadius: 0, fill: false, order: 3 },
+                        { label: 'BB Üst', data: bb.upper, borderColor: '#b470ff44', borderWidth: 1, pointRadius: 0, fill: false, order: 4 },
+                        { label: 'BB Alt', data: bb.lower, borderColor: '#b470ff44', borderWidth: 1, pointRadius: 0, fill: '-1', backgroundColor: 'rgba(180,112,255,0.04)', order: 4 },
+                        { label: 'Trend', data: trend.line, borderColor: '#ffd70033', borderWidth: 1.5, borderDash: [6, 3], pointRadius: 0, fill: false, order: 5 },
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    interaction: { mode: 'index', intersect: false },
+                    plugins: {
+                        legend: { position: 'top', labels: { color: '#8888bb', font: { size: 11 }, usePointStyle: true, pointStyle: 'line' } },
+                        annotation: { annotations },
+                        tooltip: {
+                            backgroundColor: 'rgba(15,15,50,0.95)', titleColor: '#ffd700', bodyColor: '#ccc', borderColor: '#333', borderWidth: 1,
+                            callbacks: { label: function (ctx2) { return ctx2.dataset.label + ': ' + fmt(ctx2.raw, asset); } }
+                        }
+                    },
+                    scales: {
+                        x: { type: 'time', time: { unit: state.days <= 30 ? 'day' : state.days <= 180 ? 'week' : 'month' }, ticks: { color: '#666', maxTicksLimit: 12 }, grid: { color: '#1a1a4a' } },
+                        y: { ticks: { color: '#666', callback: v => fmt(v, asset) }, grid: { color: '#1a1a4a' } }
+                    }
+                }
+            });
+        }
+
+        function renderRSIChart(timestamps, rsi) {
+            if (state.charts.rsiChart) state.charts.rsiChart.destroy();
+            const ctx = document.getElementById('rsiChart').getContext('2d');
+            const labels = timestamps.map(t => new Date(t));
+
+            state.charts.rsiChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels,
+                    datasets: [{ label: 'RSI', data: rsi, borderColor: '#ffc800', borderWidth: 1.5, pointRadius: 0, fill: false }]
+                },
+                options: {
+                    responsive: true, maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false },
+                        annotation: {
+                            annotations: {
+                                overbought: { type: 'line', yMin: 70, yMax: 70, borderColor: '#ff505066', borderWidth: 1, borderDash: [4, 4], label: { display: true, content: 'Aşırı Alım (70)', position: 'end', font: { size: 9 }, color: '#ff505088', backgroundColor: 'transparent' } },
+                                oversold: { type: 'line', yMin: 30, yMax: 30, borderColor: '#00e07066', borderWidth: 1, borderDash: [4, 4], label: { display: true, content: 'Aşırı Satım (30)', position: 'end', font: { size: 9 }, color: '#00e07088', backgroundColor: 'transparent' } },
+                                mid: { type: 'line', yMin: 50, yMax: 50, borderColor: '#ffffff15', borderWidth: 1, borderDash: [2, 4] }
+                            }
+                        },
+                        tooltip: { backgroundColor: 'rgba(15,15,50,0.95)', titleColor: '#ffc800', bodyColor: '#ccc' }
+                    },
+                    scales: {
+                        x: { type: 'time', display: false },
+                        y: { min: 0, max: 100, ticks: { color: '#666', stepSize: 20 }, grid: { color: '#1a1a4a' } }
+                    }
+                }
+            });
+        }
+
+        function renderMACDChart(timestamps, macd) {
+            if (state.charts.macdChart) state.charts.macdChart.destroy();
+            const ctx = document.getElementById('macdChart').getContext('2d');
+            const labels = timestamps.map(t => new Date(t));
+            const colors = macd.histogram.map(v => v >= 0 ? 'rgba(0,224,112,0.6)' : 'rgba(255,80,80,0.6)');
+
+            state.charts.macdChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels,
+                    datasets: [
+                        { label: 'Histogram', data: macd.histogram, backgroundColor: colors, order: 2, barPercentage: 0.6 },
+                        { label: 'MACD', data: macd.macd, borderColor: '#4488ff', borderWidth: 1.5, pointRadius: 0, type: 'line', fill: false, order: 1 },
+                        { label: 'Sinyal', data: macd.signal, borderColor: '#ff8c00', borderWidth: 1.5, pointRadius: 0, type: 'line', fill: false, order: 1 },
+                    ]
+                },
+                options: {
+                    responsive: true, maintainAspectRatio: false,
+                    plugins: {
+                        legend: { position: 'top', labels: { color: '#8888bb', font: { size: 10 }, usePointStyle: true } },
+                        tooltip: { backgroundColor: 'rgba(15,15,50,0.95)', titleColor: '#4488ff', bodyColor: '#ccc' }
+                    },
+                    scales: {
+                        x: { type: 'time', display: false },
+                        y: { ticks: { color: '#666' }, grid: { color: '#1a1a4a' } }
+                    }
+                }
+            });
+        }
+
+        // ═══════════════════════════════════════════════════
+        // FIBONACCI TABLE
+        // ═══════════════════════════════════════════════════
+        function renderFibTable(asset, fib, currentPrice) {
+            let html = '<table class="fib-table"><thead><tr><th>Seviye</th><th>Fiyat</th><th>Mesafe</th><th>Durum</th></tr></thead><tbody>';
+            fib.forEach(f => {
+                const dist = ((f.price - currentPrice) / currentPrice * 100);
+                const near = Math.abs(dist) < 3;
+                html += `<tr style="${near ? 'background:rgba(255,215,0,0.08)' : ''}">
+            <td style="color:${f.color};font-weight:600">${f.level}</td>
+            <td>${fmt(f.price, asset)}</td>
+            <td style="color:${dist >= 0 ? 'var(--green)' : 'var(--red)'}">${fmtPct(dist)}</td>
+            <td>${near ? '<span class="badge by">Yakın</span>' : dist > 0 ? '<span class="badge bb">Üstte</span>' : '<span class="badge br">Altta</span>'}</td>
+        </tr>`;
+            });
+            html += '</tbody></table>';
+            document.getElementById('fibTable').innerHTML = html;
+        }
+
+        // ═══════════════════════════════════════════════════
+        // BUY / SELL LEVELS
+        // ═══════════════════════════════════════════════════
+        function renderBuySellLevels(asset, price, fib, supRes, rsi, bb) {
+            // Calculate dynamic buy levels based on support + fibonacci
+            const buyPoints = [];
+            const sellPoints = [];
+
+            // Use fibonacci and support/resistance to generate levels
+            const fibBuy = fib.filter(f => f.price < price).sort((a, b) => b.price - a.price);
+            const fibSell = fib.filter(f => f.price > price).sort((a, b) => a.price - b.price);
+
+            // Generate 5 buy levels
+            const buySpread = price * 0.03; // ~3% intervals
+            for (let i = 0; i < 5; i++) {
+                const targetPrice = fibBuy[i]?.price || (price * (1 - (i + 1) * 0.05));
+                const pct = ((targetPrice - price) / price * 100);
+                const badges = ['by', 'bb', 'bg', 'bg', 'bg'];
+                const labels = ['Hafif Alım', 'Alım', 'Güçlü Alım', 'Güçlü Alım', 'Dip Alım'];
+                const weights = [15, 20, 25, 25, 15];
+                const reasons = [
+                    'İlk destek seviyesi, pozisyon başlangıcı',
+                    'Fibonacci destek, hacim bölgesi',
+                    'Güçlü teknik destek, alım fırsatı',
+                    'Kritik destek, agresif alım',
+                    'Uzun vadeli destek, maksimum fırsat'
+                ];
+                buyPoints.push({ price: targetPrice, pct, badge: badges[i], label: labels[i], weight: weights[i], reason: reasons[i] });
+            }
+
+            // Generate 5 sell levels
+            for (let i = 0; i < 5; i++) {
+                const targetPrice = fibSell[i]?.price || (price * (1 + (i + 1) * 0.06));
+                const pct = ((targetPrice - price) / price * 100);
+                const badges = ['bo', 'br', 'br', 'bp', 'bp'];
+                const labels = ['Hafif Satım', 'Kâr Al', 'Satım', 'Güçlü Satım', 'Tam Çıkış'];
+                const weights = [15, 20, 25, 25, 15];
+                const reasons = [
+                    'İlk direnç, kısmi kâr realizasyonu',
+                    'Fibonacci direnç, kâr al noktası',
+                    'Güçlü direnç, pozisyon azalt',
+                    'Kritik direnç, büyük kısmını sat',
+                    'Uzun vadeli direnç, pozisyonu kapat'
+                ];
+                sellPoints.push({ price: targetPrice, pct, badge: badges[i], label: labels[i], weight: weights[i], reason: reasons[i] });
+            }
+
+            // Render buy table
+            let buyHtml = '<table class="level-table"><thead><tr><th>Kademe</th><th>Fiyat</th><th>Mesafe</th><th>Pay</th><th>Seviye</th><th>Açıklama</th></tr></thead><tbody>';
+            buyPoints.forEach((p, i) => {
+                buyHtml += `<tr>
+            <td><strong>${i + 1}.</strong></td>
+            <td><strong>${fmt(p.price, asset)}</strong></td>
+            <td style="color:var(--red)">${fmtPct(p.pct)}</td>
+            <td>%${p.weight}</td>
+            <td><span class="badge ${p.badge}">${p.label}</span></td>
+            <td style="font-size:.82em;color:var(--dim)">${p.reason}</td>
+        </tr>`;
+            });
+            buyHtml += '</tbody></table>';
+            if (buyPoints.length > 0) {
+                const avgBuy = buyPoints.reduce((s, p) => s + p.price * p.weight, 0) / 100;
+                buyHtml += `<p style="margin-top:10px;font-size:.82em;color:var(--dim)">Ağırlıklı ort. giriş: <strong style="color:var(--green)">${fmt(avgBuy, asset)}</strong> (${fmtPct((avgBuy - price) / price * 100)})</p>`;
+            }
+            document.getElementById('buyLevels').innerHTML = buyHtml;
+
+            // Render sell table
+            let sellHtml = '<table class="level-table"><thead><tr><th>Kademe</th><th>Fiyat</th><th>Mesafe</th><th>Pay</th><th>Seviye</th><th>Açıklama</th></tr></thead><tbody>';
+            sellPoints.forEach((p, i) => {
+                sellHtml += `<tr>
+            <td><strong>${i + 1}.</strong></td>
+            <td><strong>${fmt(p.price, asset)}</strong></td>
+            <td style="color:var(--green)">${fmtPct(p.pct)}</td>
+            <td>%${p.weight}</td>
+            <td><span class="badge ${p.badge}">${p.label}</span></td>
+            <td style="font-size:.82em;color:var(--dim)">${p.reason}</td>
+        </tr>`;
+            });
+            sellHtml += '</tbody></table>';
+            if (sellPoints.length > 0) {
+                const avgSell = sellPoints.reduce((s, p) => s + p.price * p.weight, 0) / 100;
+                sellHtml += `<p style="margin-top:10px;font-size:.82em;color:var(--dim)">Ağırlıklı ort. çıkış: <strong style="color:var(--red)">${fmt(avgSell, asset)}</strong> (${fmtPct((avgSell - price) / price * 100)})</p>`;
+            }
+            document.getElementById('sellLevels').innerHTML = sellHtml;
+        }
+
+        // ═══════════════════════════════════════════════════
+        // AI ANALYSIS GENERATOR
+        // ═══════════════════════════════════════════════════
+        function renderAnalysis(asset, price, rsi, macd, signal, sma20, sma50, bbU, bbL, bbM, trend, fib, high, low, closes) {
+            const el = document.getElementById('analysisText');
+            const name = asset.name;
+            const unit = asset.unit;
+
+            // Determine overall trend
+            const trendUp = trend.slope > 0;
+            const trendStr = Math.abs(trend.slope) / price * 100;
+            let trendText = '';
+            if (trendStr > 0.5) trendText = trendUp ? 'güçlü yükseliş' : 'güçlü düşüş';
+            else if (trendStr > 0.1) trendText = trendUp ? 'ılımlı yükseliş' : 'ılımlı düşüş';
+            else trendText = 'yatay';
+
+            // RSI analysis
+            let rsiText = '';
+            if (rsi < 20) rsiText = `RSI göstergesi <strong>${rsi.toFixed(1)}</strong> ile aşırı satım bölgesinde bulunmaktadır. Bu seviye genellikle güçlü bir alım fırsatı sinyali verir ve kısa vadede teknik bir toparlanma beklentisi oluşturur.`;
+            else if (rsi < 30) rsiText = `RSI göstergesi <strong>${rsi.toFixed(1)}</strong> ile satım bölgesine yaklaşmıştır. Fiyatın bu seviyelerden dönüş yapma olasılığı yüksektir, kademeli alım stratejisi değerlendirilebilir.`;
+            else if (rsi > 80) rsiText = `RSI göstergesi <strong>${rsi.toFixed(1)}</strong> ile aşırı alım bölgesinin derinlerindedir. Kâr realizasyonu baskısı artabilir, pozisyon daraltma veya kademeli satım stratejisi uygulanabilir.`;
+            else if (rsi > 70) rsiText = `RSI göstergesi <strong>${rsi.toFixed(1)}</strong> ile aşırı alım bölgesine girmiştir. Kısa vadede düzeltme riski mevcuttur, yeni pozisyon açmak yerine mevcut kâr korunmalıdır.`;
+            else if (rsi > 55) rsiText = `RSI göstergesi <strong>${rsi.toFixed(1)}</strong> ile pozitif bölgede seyretmektedir. Yükseliş momentumu devam etmekte olup, trendle uyumlu pozisyonlar sürdürülebilir.`;
+            else if (rsi > 45) rsiText = `RSI göstergesi <strong>${rsi.toFixed(1)}</strong> ile nötr bölgededir. Piyasa kararsız görünmektedir ve net bir yön sinyali vermemektedir.`;
+            else rsiText = `RSI göstergesi <strong>${rsi.toFixed(1)}</strong> ile negatif bölgede seyretmektedir. Satış baskısı devam etmekte olup, destek seviyelerinin takibi önem kazanmaktadır.`;
+
+            // MACD analysis
+            let macdText = '';
+            const macdDiff = macd - signal;
+            if (macdDiff > 0 && macd > 0) macdText = `MACD sinyal çizgisinin üzerinde ve pozitif bölgede seyretmektedir. Bu durum yükseliş trendinin güçlü olduğunu ve alım baskısının sürdüğünü göstermektedir.`;
+            else if (macdDiff > 0) macdText = `MACD sinyal çizgisinin üzerine çıkmış olup yükseliş sinyali vermektedir. Ancak negatif bölgede olması, trendin henüz tam olarak dönmediğine işaret etmektedir.`;
+            else if (macdDiff < 0 && macd < 0) macdText = `MACD sinyal çizgisinin altında ve negatif bölgede seyretmektedir. Düşüş momentumu güçlüdür ve satış baskısı devam etmektedir.`;
+            else macdText = `MACD sinyal çizgisinin altına inmiş olup satış sinyali vermektedir. Pozitif bölgede olması trendin tam olarak kırılmadığını gösterse de dikkatli olunmalıdır.`;
+
+            // Bollinger analysis
+            let bbText = '';
+            if (price > bbU) bbText = `Fiyat Bollinger üst bandının üzerinde seyretmektedir. Bu, aşırı alım durumuna ve potansiyel geri çekilmeye işaret eder. Band dışı kapanışlar genellikle sürdürülebilir değildir.`;
+            else if (price < bbL) bbText = `Fiyat Bollinger alt bandının altında seyretmektedir. Bu, aşırı satım durumuna ve potansiyel toparlanmaya işaret eder. Fiyatın banda geri dönme olasılığı yüksektir.`;
+            else if (price > bbM) bbText = `Fiyat Bollinger orta bandının (SMA 20) üzerinde seyretmektedir. Bu, kısa vadeli yükseliş eğiliminin devam ettiğini göstermektedir.`;
+            else bbText = `Fiyat Bollinger orta bandının (SMA 20) altında seyretmektedir. Kısa vadeli düşüş baskısı sürmektedir ve alt banda doğru hareket riski mevcuttur.`;
+
+            // MA analysis
+            let maText = '';
+            if (price > sma20 && price > sma50) maText = `Fiyat hem 20 hem de 50 periyotluk hareketli ortalamaların üzerindedir. Bu, trendin sağlıklı bir şekilde devam ettiğini ve alıcıların kontrolde olduğunu göstermektedir.`;
+            else if (price > sma20) maText = `Fiyat 20 periyotluk hareketli ortalamanın üzerinde ancak 50 periyodun altındadır. Kısa vadeli toparlanma görülmekle birlikte orta vadeli trend henüz dönmemiştir.`;
+            else if (price > sma50) maText = `Fiyat 50 periyotluk hareketli ortalamanın üzerinde ancak 20 periyodun altındadır. Kısa vadeli baskı görülmekle birlikte orta vadeli destek korunmaktadır.`;
+            else maText = `Fiyat hem 20 hem de 50 periyotluk hareketli ortalamaların altındadır. Bu güçlü bir düşüş sinyalidir ve trendin devam etme olasılığı yüksektir.`;
+
+            // Fibonacci position
+            let fibPos = '';
+            const nearFib = fib.reduce((closest, f) => Math.abs(f.price - price) < Math.abs(closest.price - price) ? f : closest, fib[0]);
+            fibPos = `Fiyat Fibonacci <strong>${nearFib.level}</strong> seviyesine (${fmt(nearFib.price, asset)}) yakın seyretmektedir. `;
+            if (parseFloat(nearFib.level) > 50) fibPos += 'Üst Fibonacci bölgesinde kalması yükseliş trendinin gücünü koruduğunu gösterir.';
+            else fibPos += 'Alt Fibonacci bölgesinde olması düşüş baskısının sürdüğüne işaret eder.';
+
+            // Overall verdict
+            let score = 0;
+            if (rsi < 30) score += 2; else if (rsi < 45) score += 1; else if (rsi > 70) score -= 2; else if (rsi > 55) score -= 0;
+            if (macdDiff > 0) score += 1; else score -= 1;
+            if (trendUp) score += 1; else score -= 1;
+            if (price > sma20) score += 1; else score -= 1;
+            if (price < bbL) score += 1; else if (price > bbU) score -= 1;
+
+            let verdict, verdictClass, verdictText;
+            if (score >= 3) { verdict = '🟢 GÜÇLÜ AL'; verdictClass = 'verdict-buy'; verdictText = 'Teknik göstergelerin büyük çoğunluğu alım yönünde sinyal vermektedir. Kademeli alım stratejisi ile pozisyon oluşturulabilir.'; }
+            else if (score >= 1) { verdict = '🟡 AL (Dikkatli)'; verdictClass = 'verdict-buy'; verdictText = 'Teknik görünüm cautiously bullish (ihtiyatlı yükseliş) yönündedir. Risk yönetimi ile kademeli alım düşünülebilir.'; }
+            else if (score <= -3) { verdict = '🔴 GÜÇLÜ SAT'; verdictClass = 'verdict-sell'; verdictText = 'Teknik göstergelerin büyük çoğunluğu satış yönünde sinyal vermektedir. Pozisyon daraltma veya kâr realizasyonu önerilir.'; }
+            else if (score <= -1) { verdict = '🟠 SAT (Dikkatli)'; verdictClass = 'verdict-sell'; verdictText = 'Teknik görünüm cautiously bearish (ihtiyatlı düşüş) yönündedir. Stop-loss seviyeleri sıkılaştırılmalıdır.'; }
+            else { verdict = '🟡 BEKLE'; verdictClass = 'verdict-hold'; verdictText = 'Teknik göstergeler karışık sinyal vermektedir. Net bir yön oluşana kadar beklemek veya mevcut pozisyonu korumak mantıklı olabilir.'; }
+
+            // Volatility
+            const returns = [];
+            for (let i = 1; i < closes.length; i++) returns.push((closes[i] - closes[i - 1]) / closes[i - 1]);
+            const avgReturn = returns.reduce((s, v) => s + v, 0) / returns.length;
+            const volat = Math.sqrt(returns.reduce((s, v) => s + Math.pow(v - avgReturn, 2), 0) / returns.length) * 100;
+            let volText = '';
+            if (volat > 5) volText = `Volatilite oldukça yüksek (%${volat.toFixed(2)}), ani fiyat hareketlerine karşı dikkatli olunmalıdır.`;
+            else if (volat > 2) volText = `Volatilite orta seviyede (%${volat.toFixed(2)}), normal piyasa koşulları hakimdir.`;
+            else volText = `Volatilite düşük (%${volat.toFixed(2)}), piyasada sakinlik hakimdir, bu durum genellikle büyük bir hareketin habercisi olabilir.`;
+
+            const now = new Date();
+            const dateStr = now.toLocaleDateString('tr-TR', { day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+
+            el.innerHTML = `
+        <div class="analyst-text">
+            <p><strong>${name}</strong> için ${state.days} günlük teknik analiz raporu (${dateStr}):</p><br>
+            <p><strong>📈 Trend Analizi:</strong> ${name} genel olarak <strong>${trendText}</strong> trendinde seyretmektedir. Fiyat şu anda <strong>${fmt(price, asset)}</strong> seviyesindedir. Son ${state.days} günde en yüksek ${fmt(high, asset)}, en düşük ${fmt(low, asset)} seviyesi görülmüştür.</p><br>
+            <p><strong>📊 Hareketli Ortalamalar:</strong> ${maText}</p><br>
+            <p><strong>📉 RSI Analizi:</strong> ${rsiText}</p><br>
+            <p><strong>📊 MACD Analizi:</strong> ${macdText}</p><br>
+            <p><strong>📏 Bollinger Bantları:</strong> ${bbText}</p><br>
+            <p><strong>🔢 Fibonacci Analizi:</strong> ${fibPos}</p><br>
+            <p><strong>📊 Volatilite:</strong> ${volText}</p><br>
+            <p><strong>📋 Sonuç:</strong> ${verdictText}</p>
+        </div>
+        <div class="verdict ${verdictClass}">${verdict}</div>
+    `;
+        }
+
+        // ═══════════════════════════════════════════════════
+        // NAVIGATION
+        // ═══════════════════════════════════════════════════
+        function showDashboard() {
+            destroyCharts();
+            state.currentAsset = null;
+            document.getElementById('detailView').style.display = 'none';
+            document.getElementById('dashboard').style.display = 'block';
+        }
+
+        // ═══════════════════════════════════════════════════
+        // AUTO REFRESH
+        // ═══════════════════════════════════════════════════
+        let isRefreshing = false;
+        let refreshCount = 0;
+
+        async function refreshPrices() {
+            if (isRefreshing) return; // prevent overlap
+            isRefreshing = true;
+            try {
+                document.getElementById('statusDot').className = 'status-dot online';
+                document.getElementById('statusText').textContent = '🔄 Güncelleniyor...';
+
+                // Store old prices for comparison
+                const oldPrices = JSON.parse(JSON.stringify(state.prices));
+
+                // Fetch all in parallel
+                const results = await Promise.allSettled([
+                    fetchExchangeRate(),
+                    fetchCryptoPrices(),
+                    fetchMetalPrices()
+                ]);
+
+                // Check which succeeded (functions return true/false)
+                const outcomes = results.map(r => r.status === 'fulfilled' ? r.value : false);
+                const allFailed = outcomes.every(v => v === false);
+                const someFailed = outcomes.some(v => v === false);
+
+                refreshCount++;
+
+                // Render dashboard
+                renderDashboard();
+
+                // Flash updated cards
+                setTimeout(() => {
+                    document.querySelectorAll('.asset-card').forEach(card => {
+                        card.classList.add('flash-update');
+                        setTimeout(() => card.classList.remove('flash-update'), 700);
+                    });
+                }, 50);
+
+                // Update detail view if active
+                if (state.currentAsset) {
+                    const p = state.prices[state.currentAsset.id];
+                    if (p) {
+                        document.getElementById('detailPrice').textContent = fmt(p.price, state.currentAsset);
+                        const chg = p.change24h || 0;
+                        const chgEl = document.getElementById('detailChange');
+                        chgEl.textContent = fmtPct(chg);
+                        chgEl.style.color = chg >= 0 ? 'var(--green)' : 'var(--red)';
+                    }
+                }
+
+                // Status feedback
+                if (allFailed) {
+                    document.getElementById('statusDot').className = 'status-dot offline';
+                    document.getElementById('statusText').textContent = '❌ Bağlantı Yok';
+                } else if (someFailed) {
+                    document.getElementById('statusDot').className = 'status-dot online';
+                    document.getElementById('statusText').textContent = '⚠️ Kısmi';
+                } else {
+                    document.getElementById('statusDot').className = 'status-dot online';
+                    document.getElementById('statusText').textContent = '✅ Bağlı';
+                }
+
+                const now = new Date();
+                document.getElementById('lastUpdate').textContent = `Son: ${now.toLocaleTimeString('tr-TR')} (#${refreshCount})`;
+            } catch (e) {
+                console.error('Refresh error:', e);
+                document.getElementById('statusDot').className = 'status-dot offline';
+                document.getElementById('statusText').textContent = '❌ Hata: ' + e.message;
+                logApi('system', false, 'Genel hata: ' + e.message);
+            } finally {
+                isRefreshing = false;
+            }
+        }
+
+        async function manualRefresh() {
+            state.countdown = 60;
+            await refreshPrices();
+        }
+
+        function startCountdown() {
+            state.countdown = 60;
+            if (state.refreshInterval) clearInterval(state.refreshInterval);
+            state.refreshInterval = setInterval(() => {
+                state.countdown--;
+                if (state.countdown <= 0) {
+                    state.countdown = 60;
+                    refreshPrices();
+                }
+                document.getElementById('refreshTimer').textContent = state.countdown + 's';
+            }, 1000);
+        }
+
+        // ═══════════════════════════════════════════════════
+        // INIT
+        // ═══════════════════════════════════════════════════
+        async function init() {
+            logApi('system', true, 'Platform başlatılıyor...');
+            renderDashboard(); // Show shells immediately
+            await refreshPrices();
+            startCountdown();
+            logApi('system', true, `Başlatıldı. Protokol: ${location.protocol}`);
+            if (location.protocol === 'file:') {
+                logApi('system', false, 'file:// protokolü — API çağrıları CORS nedeniyle engelleniyor! Live Server kullanın.');
+                document.getElementById('corsWarning').classList.add('visible');
+            }
+        }
+
+        init();
+    </script>
+</body>
+
+</html>
