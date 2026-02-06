@@ -842,6 +842,7 @@
             </div>
 
             <div class="timeframe-btns" id="timeframeBtns">
+                <button class="tf-btn" data-days="1">1G</button>
                 <button class="tf-btn" data-days="7">7G</button>
                 <button class="tf-btn" data-days="30">30G</button>
                 <button class="tf-btn active" data-days="90">90G</button>
@@ -889,10 +890,26 @@
             <div class="levels-grid">
                 <div class="level-card buy-card">
                     <h3>📥 Kademeli Alım Noktaları</h3>
+                    <div class="timeframe-btns" style="margin:10px 0">
+                        <button class="tf-btn horizon-btn active" data-horizon="short"
+                            onclick="changeHorizon('short')">Kısa Vade</button>
+                        <button class="tf-btn horizon-btn" data-horizon="medium" onclick="changeHorizon('medium')">Orta
+                            Vade</button>
+                        <button class="tf-btn horizon-btn" data-horizon="long" onclick="changeHorizon('long')">Uzun
+                            Vade</button>
+                    </div>
                     <div id="buyLevels"></div>
                 </div>
                 <div class="level-card sell-card">
                     <h3>📤 Kademeli Satım Noktaları</h3>
+                    <div class="timeframe-btns" style="margin:10px 0">
+                        <button class="tf-btn horizon-btn active" data-horizon="short"
+                            onclick="changeHorizon('short')">Kısa Vade</button>
+                        <button class="tf-btn horizon-btn" data-horizon="medium" onclick="changeHorizon('medium')">Orta
+                            Vade</button>
+                        <button class="tf-btn horizon-btn" data-horizon="long" onclick="changeHorizon('long')">Uzun
+                            Vade</button>
+                    </div>
                     <div id="sellLevels"></div>
                 </div>
             </div>
@@ -938,6 +955,7 @@
             countdown: 30,
             goldChange24h: 0,
             silverChange24h: 0,
+            currentLevelData: null,
         };
 
         // ═══════════════════════════════════════════════════
@@ -1109,8 +1127,8 @@
             const binanceSymbol = cgToBinance[cgId];
             if (binanceSymbol) {
                 try {
-                    const interval = days <= 7 ? '1h' : days <= 30 ? '4h' : '1d';
-                    const limit = days <= 7 ? days * 24 : days <= 30 ? days * 6 : days;
+                    const interval = days <= 1 ? '15m' : days <= 7 ? '1h' : days <= 30 ? '4h' : '1d';
+                    const limit = days <= 1 ? 96 : days <= 7 ? days * 24 : days <= 30 ? days * 6 : days;
                     const d = await fetchJSON(`https://api.binance.com/api/v3/klines?symbol=${binanceSymbol}&interval=${interval}&limit=${Math.min(limit, 1000)}`);
                     if (d && Array.isArray(d) && d.length > 0) {
                         return d.map(k => ({ t: k[0], c: parseFloat(k[4]) })); // k[4] = close price
@@ -1521,7 +1539,7 @@
 
             await fetchHistory(asset, state.days);
             const hist = state.history[asset.id];
-            if (!hist || hist.length < 20) {
+            if (!hist || hist.length < 10) {
                 document.getElementById('indicatorGrid').innerHTML = '<div class="loader">Veri alınamadı. Lütfen tekrar deneyin.</div>';
                 return;
             }
@@ -1541,12 +1559,16 @@
             }
 
             // Calculate indicators
-            const sma20 = SMA(closes, 20);
-            const sma50 = SMA(closes, Math.min(50, Math.floor(closes.length * 0.4)));
-            const sma200 = closes.length >= 200 ? SMA(closes, 200) : SMA(closes, Math.floor(closes.length * 0.8));
-            const rsi = RSI(closes, 14);
-            const macd = MACD(closes, 12, 26, 9);
-            const bb = BollingerBands(closes, 20, 2);
+            const smaPeriod20 = Math.min(20, Math.floor(closes.length * 0.3));
+            const smaPeriod50 = Math.min(50, Math.floor(closes.length * 0.4));
+            const sma20 = SMA(closes, Math.max(2, smaPeriod20));
+            const sma50 = SMA(closes, Math.max(2, smaPeriod50));
+            const sma200 = closes.length >= 200 ? SMA(closes, 200) : SMA(closes, Math.max(2, Math.floor(closes.length * 0.8)));
+            const rsiPeriod = Math.min(14, Math.floor(closes.length * 0.3));
+            const rsi = RSI(closes, Math.max(2, rsiPeriod));
+            const macd = MACD(closes, Math.min(12, Math.floor(closes.length * 0.2)), Math.min(26, Math.floor(closes.length * 0.4)), 9);
+            const bbPeriod = Math.min(20, Math.floor(closes.length * 0.3));
+            const bb = BollingerBands(closes, Math.max(2, bbPeriod), 2);
             const trend = linearRegression(closes);
 
             const high = Math.max(...closes);
@@ -1581,7 +1603,10 @@
             renderFibTable(asset, fib, lastClose);
 
             // Buy/Sell levels
-            renderBuySellLevels(asset, lastClose, fib, supRes, lastRsi, bb);
+            renderBuySellLevels(asset, lastClose, fib, supRes, lastRsi, bb, state.days);
+
+            // Store current data for horizon changes
+            state.currentLevelData = { asset, price: lastClose, fib, supRes, rsi: lastRsi, bb, days: state.days };
 
             // AI Analysis
             renderAnalysis(asset, lastClose, lastRsi, lastMacd, lastSignal, lastSma20, lastSma50, lastBBU, lastBBL, lastBBM, trend, fib, high, low, closes);
@@ -1664,7 +1689,7 @@
                         }
                     },
                     scales: {
-                        x: { type: 'time', time: { unit: state.days <= 30 ? 'day' : state.days <= 180 ? 'week' : 'month' }, ticks: { color: '#666', maxTicksLimit: 12 }, grid: { color: '#1a1a4a' } },
+                        x: { type: 'time', time: { unit: state.days <= 1 ? 'hour' : state.days <= 30 ? 'day' : state.days <= 180 ? 'week' : 'month' }, ticks: { color: '#666', maxTicksLimit: 12 }, grid: { color: '#1a1a4a' } },
                         y: { ticks: { color: '#666', callback: v => fmt(v, asset) }, grid: { color: '#1a1a4a' } }
                     }
                 }
@@ -1834,7 +1859,7 @@
                     scales: {
                         x: {
                             type: 'time',
-                            time: { unit: state.days <= 30 ? 'day' : state.days <= 180 ? 'week' : 'month' },
+                            time: { unit: state.days <= 1 ? 'hour' : state.days <= 30 ? 'day' : state.days <= 180 ? 'week' : 'month' },
                             ticks: { color: '#666', maxTicksLimit: 12 },
                             grid: { color: '#1a1a4a' }
                         },
@@ -1910,54 +1935,156 @@
         }
 
         // ═══════════════════════════════════════════════════
-        // BUY / SELL LEVELS
+        // BUY / SELL LEVELS (Kısa / Orta / Uzun Vade)
         // ═══════════════════════════════════════════════════
-        function renderBuySellLevels(asset, price, fib, supRes, rsi, bb) {
-            // Calculate dynamic buy levels based on support + fibonacci
+        let currentHorizon = 'short';
+
+        function changeHorizon(horizon) {
+            currentHorizon = horizon;
+            document.querySelectorAll('.horizon-btn').forEach(btn => {
+                btn.classList.remove('active');
+                if (btn.dataset.horizon === horizon) btn.classList.add('active');
+            });
+            if (state.currentLevelData) {
+                const d = state.currentLevelData;
+                renderBuySellLevels(d.asset, d.price, d.fib, d.supRes, d.rsi, d.bb, d.days);
+            }
+        }
+
+        function getHorizonConfig(horizon) {
+            switch (horizon) {
+                case 'short':
+                    return {
+                        label: 'Kısa Vade (1-7 gün)',
+                        buySpacingPct: [1.5, 3, 4.5, 6, 8],
+                        sellSpacingPct: [2, 4, 6, 8, 10],
+                        buyLabels: ['Scalp Alım', 'Kısa Alım', 'Destek Alım', 'Güçlü Alım', 'Stop Alım'],
+                        sellLabels: ['Scalp Satım', 'Kısa Kâr Al', 'Hedef 1', 'Hedef 2', 'Tam Çıkış'],
+                        buyReasons: [
+                            'Gün içi destek, hızlı alım fırsatı',
+                            'Kısa vadeli destek, momentum girişi',
+                            'Teknik destek bölgesi, kısa pozisyon',
+                            'Bollinger alt bandı civarı, güçlü giriş',
+                            'Aşırı satım bölgesi, riskli ama fırsat'
+                        ],
+                        sellReasons: [
+                            'Gün içi direnç, kısmi kâr al',
+                            'Kısa vadeli direnç, kâr realizasyonu',
+                            'Teknik direnç, pozisyon azalt',
+                            'Bollinger üst band, satış bölgesi',
+                            'Aşırı alım, pozisyonu kapat'
+                        ],
+                        weights: [25, 25, 20, 18, 12]
+                    };
+                case 'medium':
+                    return {
+                        label: 'Orta Vade (1-3 ay)',
+                        buySpacingPct: [3, 6, 10, 15, 20],
+                        sellSpacingPct: [4, 8, 13, 18, 25],
+                        buyLabels: ['İlk Alım', 'Destek Alım', 'Fibonacci Alım', 'Güçlü Destek', 'Dip Alım'],
+                        sellLabels: ['Hafif Kâr Al', 'Kâr Al', 'Direnç Satım', 'Güçlü Satım', 'Hedef Satım'],
+                            buyReasons: [
+                                'SMA 20 destek bölgesi, ilk giriş',
+                                'Fibonacci %23.6 destek, kademeli giriş',
+                                'Fibonacci %38.2 destek, teknik alım',
+                                '%50 geri çekilme, güçlü destek',
+                                'Fibonacci %61.8 destek, uzun pozisyon'
+                            ],
+                            sellReasons: [
+                                'SMA 20 direnç, kısmi kâr realizasyonu',
+                                'Fibonacci direnç, kademeli çıkış',
+                                'Güçlü direnç bölgesi, pozisyon azalt',
+                                'Kritik direnç, büyük kısmını sat',
+                                'Hedef fiyat, tüm pozisyonu kapat'
+                            ],
+                            weights: [15, 20, 25, 25, 15]
+                    };
+                case 'long':
+                    return {
+                        label: 'Uzun Vade (6 ay - 1+ yıl)',
+                        buySpacingPct: [5, 12, 20, 30, 40],
+                        sellSpacingPct: [8, 18, 30, 45, 65],
+                        buyLabels: ['Pozisyon Başlat', 'Kademeli Ekleme', 'Büyük Alım', 'Ayı Piyasası Alım', 'Maksimum Fırsat'],
+                        sellLabels: ['Kısmi Kâr', 'Hedef 1', 'Büyük Kâr Al', 'Güçlü Satım', 'Tam Çıkış'],
+                        buyReasons: [
+                            'Uzun vadeli pozisyon başlangıcı, düşenli alım (DCA)',
+                            'SMA 200 bölgesi, uzun vadeli destek alanı',
+                            'Büyük düzeltme, güçlü birikim fırsatı',
+                            'Ayı piyasası dibi, agresif uzun pozisyon',
+                            'Tarihsel dip bölge, maksimum birikim'
+                        ],
+                        sellReasons: [
+                            'İlk hedef, sermayeyi koruma amacıyla kısmi satış',
+                            'Orta vadeli hedef, yatırımın yarısını realize et',
+                            'Uzun vadeli direnç, büyük kâr realizasyonu',
+                            'Boğa piyasası zirvesi, pozisyonu küçült',
+                            'Tam hedef, tüm pozisyonu kapat ve bekle'
+                        ],
+                        weights: [10, 15, 25, 30, 20]
+                    };
+            }
+        }
+
+        function renderBuySellLevels(asset, price, fib, supRes, rsi, bb, days) {
+            const config = getHorizonConfig(currentHorizon);
             const buyPoints = [];
             const sellPoints = [];
 
-            // Use fibonacci and support/resistance to generate levels
+            // Fibonacci seviyeleri ile destek/direnç birleştir
             const fibBuy = fib.filter(f => f.price < price).sort((a, b) => b.price - a.price);
             const fibSell = fib.filter(f => f.price > price).sort((a, b) => a.price - b.price);
 
-            // Generate 5 buy levels
-            const buySpread = price * 0.03; // ~3% intervals
+            // Generate buy levels
             for (let i = 0; i < 5; i++) {
-                const targetPrice = fibBuy[i]?.price || (price * (1 - (i + 1) * 0.05));
+                let targetPrice;
+                // Fibonacci varsa kullan, yoksa yüzde hesapla
+                if (fibBuy[i] && Math.abs((fibBuy[i].price - price) / price * 100) <= config.buySpacingPct[i] * 1.5) {
+                    // Fibonacci seviyesini vade mesafesine uyarla
+                    targetPrice = price * (1 - config.buySpacingPct[i] / 100);
+                    // Fibonacci yakınsa fibonacci kullan
+                    const fibDist = Math.abs((fibBuy[i].price - targetPrice) / targetPrice * 100);
+                    if (fibDist < config.buySpacingPct[i] * 0.5) targetPrice = fibBuy[i].price;
+                } else {
+                    targetPrice = price * (1 - config.buySpacingPct[i] / 100);
+                }
                 const pct = ((targetPrice - price) / price * 100);
                 const badges = ['by', 'bb', 'bg', 'bg', 'bg'];
-                const labels = ['Hafif Alım', 'Alım', 'Güçlü Alım', 'Güçlü Alım', 'Dip Alım'];
-                const weights = [15, 20, 25, 25, 15];
-                const reasons = [
-                    'İlk destek seviyesi, pozisyon başlangıcı',
-                    'Fibonacci destek, hacim bölgesi',
-                    'Güçlü teknik destek, alım fırsatı',
-                    'Kritik destek, agresif alım',
-                    'Uzun vadeli destek, maksimum fırsat'
-                ];
-                buyPoints.push({ price: targetPrice, pct, badge: badges[i], label: labels[i], weight: weights[i], reason: reasons[i] });
+                buyPoints.push({
+                    price: targetPrice, pct,
+                    badge: badges[i],
+                    label: config.buyLabels[i],
+                    weight: config.weights[i],
+                    reason: config.buyReasons[i]
+                });
             }
 
-            // Generate 5 sell levels
+            // Generate sell levels
             for (let i = 0; i < 5; i++) {
-                const targetPrice = fibSell[i]?.price || (price * (1 + (i + 1) * 0.06));
+                let targetPrice;
+                if (fibSell[i] && Math.abs((fibSell[i].price - price) / price * 100) <= config.sellSpacingPct[i] * 1.5) {
+                    targetPrice = price * (1 + config.sellSpacingPct[i] / 100);
+                    const fibDist = Math.abs((fibSell[i].price - targetPrice) / targetPrice * 100);
+                    if (fibDist < config.sellSpacingPct[i] * 0.5) targetPrice = fibSell[i].price;
+                } else {
+                    targetPrice = price * (1 + config.sellSpacingPct[i] / 100);
+                }
                 const pct = ((targetPrice - price) / price * 100);
                 const badges = ['bo', 'br', 'br', 'bp', 'bp'];
-                const labels = ['Hafif Satım', 'Kâr Al', 'Satım', 'Güçlü Satım', 'Tam Çıkış'];
-                const weights = [15, 20, 25, 25, 15];
-                const reasons = [
-                    'İlk direnç, kısmi kâr realizasyonu',
-                    'Fibonacci direnç, kâr al noktası',
-                    'Güçlü direnç, pozisyon azalt',
-                    'Kritik direnç, büyük kısmını sat',
-                    'Uzun vadeli direnç, pozisyonu kapat'
-                ];
-                sellPoints.push({ price: targetPrice, pct, badge: badges[i], label: labels[i], weight: weights[i], reason: reasons[i] });
+                sellPoints.push({
+                    price: targetPrice, pct,
+                    badge: badges[i],
+                    label: config.sellLabels[i],
+                    weight: config.weights[i],
+                    reason: config.sellReasons[i]
+                });
             }
 
+            // Vade etiketi
+            const horizonLabel = `<div style="background:rgba(255,215,0,0.08);border:1px solid rgba(255,215,0,0.15);border-radius:8px;padding:8px 14px;margin-bottom:12px;font-size:.82em;color:var(--accent);text-align:center"><strong>⏱ ${config.label}</strong></div>`;
+
             // Render buy table
-            let buyHtml = '<table class="level-table"><thead><tr><th>Kademe</th><th>Fiyat</th><th>Mesafe</th><th>Pay</th><th>Seviye</th><th>Açıklama</th></tr></thead><tbody>';
+            let buyHtml = horizonLabel;
+            buyHtml += '<table class="level-table"><thead><tr><th>Kademe</th><th>Fiyat</th><th>Mesafe</th><th>Pay</th><th>Seviye</th><th>Açıklama</th></tr></thead><tbody>';
             buyPoints.forEach((p, i) => {
                 buyHtml += `<tr>
             <td><strong>${i + 1}.</strong></td>
@@ -1976,7 +2103,8 @@
             document.getElementById('buyLevels').innerHTML = buyHtml;
 
             // Render sell table
-            let sellHtml = '<table class="level-table"><thead><tr><th>Kademe</th><th>Fiyat</th><th>Mesafe</th><th>Pay</th><th>Seviye</th><th>Açıklama</th></tr></thead><tbody>';
+            let sellHtml = horizonLabel;
+            sellHtml += '<table class="level-table"><thead><tr><th>Kademe</th><th>Fiyat</th><th>Mesafe</th><th>Pay</th><th>Seviye</th><th>Açıklama</th></tr></thead><tbody>';
             sellPoints.forEach((p, i) => {
                 sellHtml += `<tr>
             <td><strong>${i + 1}.</strong></td>
