@@ -675,7 +675,7 @@
         <div class="header-right">
             <span><span class="status-dot online" id="statusDot"></span><span id="statusText">Bağlı</span></span>
             <button class="refresh-btn" onclick="manualRefresh()" title="Manuel Güncelle">🔄 Güncelle</button>
-            <span class="refresh-timer" id="refreshTimer">60s</span>
+            <span class="refresh-timer" id="refreshTimer">30s</span>
             <span id="lastUpdate"></span>
             <button class="refresh-btn" onclick="toggleLog()" title="API Log">📋</button>
         </div>
@@ -796,7 +796,9 @@
             days: 90,
             charts: {},
             refreshInterval: null,
-            countdown: 60,
+            countdown: 30,
+            goldChange24h: 0,
+            silverChange24h: 0,
         };
 
         // ═══════════════════════════════════════════════════
@@ -857,16 +859,31 @@
         }
 
         async function fetchCryptoPrices() {
-            // Try CoinGecko
+            // Primary: Binance public API (en güvenilir, rate limit yok)
+            try {
+                const [btcB, ethB, usdtB] = await Promise.all([
+                    fetchJSON('https://api.binance.com/api/v3/ticker/24hr?symbol=BTCUSDT'),
+                    fetchJSON('https://api.binance.com/api/v3/ticker/24hr?symbol=ETHUSDT'),
+                    fetchJSON('https://api.binance.com/api/v3/ticker/24hr?symbol=USDCUSDT')
+                ]);
+                if (btcB && btcB.lastPrice) {
+                    state.prices['btc'] = { price: parseFloat(btcB.lastPrice), change24h: parseFloat(btcB.priceChangePercent) || 0 };
+                    state.prices['eth'] = ethB ? { price: parseFloat(ethB.lastPrice), change24h: parseFloat(ethB.priceChangePercent) || 0 } : state.prices['eth'];
+                    state.prices['usdt'] = { price: 1.0, change24h: usdtB ? -(parseFloat(usdtB.priceChangePercent) || 0) : 0 };
+                    logApi('crypto', true, `(Binance) BTC=$${parseFloat(btcB.lastPrice).toLocaleString()} ETH=$${ethB ? parseFloat(ethB.lastPrice).toLocaleString() : '?'}`);
+                    return true;
+                }
+            } catch (e) { console.warn('Binance fail:', e); }
+            // Fallback 1: CoinGecko (rate limit riski var)
             let d = await fetchJSON('https://api.coingecko.com/api/v3/simple/price?ids=bitcoin,ethereum,tether&vs_currencies=usd&include_24hr_change=true');
             if (d && (d.bitcoin || d.ethereum)) {
                 if (d.bitcoin) state.prices['btc'] = { price: d.bitcoin.usd, change24h: d.bitcoin.usd_24h_change || 0 };
                 if (d.ethereum) state.prices['eth'] = { price: d.ethereum.usd, change24h: d.ethereum.usd_24h_change || 0 };
                 if (d.tether) state.prices['usdt'] = { price: d.tether.usd, change24h: d.tether.usd_24h_change || 0 };
-                logApi('crypto', true, `BTC=$${d.bitcoin?.usd?.toLocaleString() || '?'} ETH=$${d.ethereum?.usd?.toLocaleString() || '?'}`);
+                logApi('crypto', true, `(CoinGecko) BTC=$${d.bitcoin?.usd?.toLocaleString() || '?'} ETH=$${d.ethereum?.usd?.toLocaleString() || '?'}`);
                 return true;
             }
-            // Fallback: CoinCap API (no key needed, CORS friendly)
+            // Fallback 2: CoinCap API
             try {
                 const [btcR, ethR] = await Promise.all([
                     fetchJSON('https://api.coincap.io/v2/assets/bitcoin'),
@@ -878,69 +895,102 @@
                 logApi('crypto', true, `(CoinCap) BTC=$${state.prices['btc']?.price?.toLocaleString() || '?'}`);
                 return true;
             } catch (e) { }
-            // Fallback 2: Binance public API
-            try {
-                const [btcB, ethB] = await Promise.all([
-                    fetchJSON('https://api.binance.com/api/v3/ticker/24hr?symbol=BTCUSDT'),
-                    fetchJSON('https://api.binance.com/api/v3/ticker/24hr?symbol=ETHUSDT')
-                ]);
-                if (btcB) state.prices['btc'] = { price: parseFloat(btcB.lastPrice), change24h: parseFloat(btcB.priceChangePercent) || 0 };
-                if (ethB) state.prices['eth'] = { price: parseFloat(ethB.lastPrice), change24h: parseFloat(ethB.priceChangePercent) || 0 };
-                state.prices['usdt'] = { price: 1.0, change24h: 0 };
-                logApi('crypto', true, `(Binance) BTC=$${state.prices['btc']?.price?.toLocaleString() || '?'}`);
-                return true;
-            } catch (e) { }
             logApi('crypto', false, 'Kripto verisi alınamadı - tüm kaynaklar başarısız');
             return false;
         }
 
         async function fetchMetalPrices() {
             let success = false;
-            // Try metals.live API
-            const d = await fetchJSON('https://api.metals.live/v1/spot');
-            if (d && Array.isArray(d)) {
-                d.forEach(m => {
-                    if (m.gold) state.goldOz = m.gold;
-                    if (m.silver) state.silverOz = m.silver;
-                });
-                success = true;
-                logApi('metals', true, `Au=$${state.goldOz} Ag=$${state.silverOz}`);
-            }
-            if (!success) {
-                // Try metals.dev free API
-                const d2 = await fetchJSON('https://api.metals.dev/v1/latest?api_key=demo&currency=USD&unit=toz');
-                if (d2 && d2.metals) {
-                    if (d2.metals.gold) state.goldOz = d2.metals.gold;
-                    if (d2.metals.silver) state.silverOz = d2.metals.silver;
+            // Primary: goldprice.org API (güvenilir, CORS destekli)
+            try {
+                const d = await fetchJSON('https://data-asg.goldprice.org/dbXRates/USD');
+                if (d && d.items && d.items.length > 0) {
+                    const item = d.items[0];
+                    if (item.xauPrice) {
+                        state.goldOz = item.xauPrice;
+                        state.goldChange24h = item.pcXau || 0;
+                    }
+                    if (item.xagPrice) {
+                        state.silverOz = item.xagPrice;
+                        state.silverChange24h = item.pcXag || 0;
+                    }
                     success = true;
-                    logApi('metals', true, `(metals.dev) Au=$${state.goldOz} Ag=$${state.silverOz}`);
+                    logApi('metals', true, `(goldprice.org) Au=$${state.goldOz.toFixed(2)} (${state.goldChange24h > 0 ? '+' : ''}${state.goldChange24h.toFixed(2)}%) Ag=$${state.silverOz.toFixed(2)} (${state.silverChange24h > 0 ? '+' : ''}${state.silverChange24h.toFixed(2)}%)`);
                 }
+            } catch (e) { console.warn('goldprice.org fail:', e); }
+            // Fallback 1: metals.live API
+            if (!success) {
+                const d = await fetchJSON('https://api.metals.live/v1/spot');
+                if (d && Array.isArray(d)) {
+                    d.forEach(m => {
+                        if (m.gold) state.goldOz = m.gold;
+                        if (m.silver) state.silverOz = m.silver;
+                    });
+                    success = true;
+                    logApi('metals', true, `(metals.live) Au=$${state.goldOz} Ag=$${state.silverOz}`);
+                }
+            }
+            // Fallback 2: Swissquote forex feed
+            if (!success) {
+                try {
+                    const [goldR, silverR] = await Promise.all([
+                        fetchJSON('https://forex-data-feed.swissquote.com/public-quotes/bboquotes/instrument/XAU/USD'),
+                        fetchJSON('https://forex-data-feed.swissquote.com/public-quotes/bboquotes/instrument/XAG/USD')
+                    ]);
+                    if (goldR && Array.isArray(goldR) && goldR[0]?.spreadProfilePrices) {
+                        const gp = goldR[0].spreadProfilePrices[0];
+                        state.goldOz = (gp.bid + gp.ask) / 2;
+                    }
+                    if (silverR && Array.isArray(silverR) && silverR[0]?.spreadProfilePrices) {
+                        const sp = silverR[0].spreadProfilePrices[0];
+                        state.silverOz = (sp.bid + sp.ask) / 2;
+                    }
+                    if (state.goldOz > 0) {
+                        success = true;
+                        logApi('metals', true, `(Swissquote) Au=$${state.goldOz.toFixed(2)} Ag=$${state.silverOz.toFixed(2)}`);
+                    }
+                } catch (e) { console.warn('Swissquote fail:', e); }
             }
             if (!success) {
                 logApi('metals', false, 'Metal verisi alınamadı, önceki değerler korunuyor');
             }
-            // Calculate all metal prices
-            state.prices['ons-gold'] = { price: state.goldOz, change24h: 0 };
-            state.prices['ons-silver'] = { price: state.silverOz, change24h: 0 };
-            state.prices['gram-gold'] = { price: (state.goldOz * state.usdTry) / TROY_OZ_GRAM, change24h: 0 };
-            state.prices['gram-silver'] = { price: (state.silverOz * state.usdTry) / TROY_OZ_GRAM, change24h: 0 };
+            // Calculate all metal prices with 24h change
+            const goldChg = state.goldChange24h || 0;
+            const silverChg = state.silverChange24h || 0;
+            state.prices['ons-gold'] = { price: state.goldOz, change24h: goldChg };
+            state.prices['ons-silver'] = { price: state.silverOz, change24h: silverChg };
+            state.prices['gram-gold'] = { price: (state.goldOz * state.usdTry) / TROY_OZ_GRAM, change24h: goldChg };
+            state.prices['gram-silver'] = { price: (state.silverOz * state.usdTry) / TROY_OZ_GRAM, change24h: silverChg };
             return success;
         }
 
         async function fetchCryptoHistory(cgId, days) {
-            // Try CoinGecko
+            // Primary: Binance klines API (en güvenilir)
+            const cgToBinance = { bitcoin: 'BTCUSDT', ethereum: 'ETHUSDT', tether: 'USDCUSDT' };
+            const binanceSymbol = cgToBinance[cgId];
+            if (binanceSymbol) {
+                try {
+                    const interval = days <= 7 ? '1h' : days <= 30 ? '4h' : '1d';
+                    const limit = days <= 7 ? days * 24 : days <= 30 ? days * 6 : days;
+                    const d = await fetchJSON(`https://api.binance.com/api/v3/klines?symbol=${binanceSymbol}&interval=${interval}&limit=${Math.min(limit, 1000)}`);
+                    if (d && Array.isArray(d) && d.length > 0) {
+                        return d.map(k => ({ t: k[0], c: parseFloat(k[4]) })); // k[4] = close price
+                    }
+                } catch (e) { console.warn('Binance klines fail:', e); }
+            }
+            // Fallback 1: CoinGecko
             let d = await fetchJSON(`https://api.coingecko.com/api/v3/coins/${cgId}/market_chart?vs_currency=usd&days=${days}`);
             if (d && d.prices) {
                 return d.prices.map(p => ({ t: p[0], c: p[1] }));
             }
-            // Fallback: CoinCap history
+            // Fallback 2: CoinCap history
             const cgToCoinCap = { bitcoin: 'bitcoin', ethereum: 'ethereum', tether: 'tether' };
             const capId = cgToCoinCap[cgId];
             if (capId) {
                 const now = Date.now();
                 const start = now - days * 86400000;
-                const interval = days <= 7 ? 'h1' : days <= 90 ? 'h6' : 'd1';
-                const d2 = await fetchJSON(`https://api.coincap.io/v2/assets/${capId}/history?interval=${interval}&start=${start}&end=${now}`);
+                const intv = days <= 7 ? 'h1' : days <= 90 ? 'h6' : 'd1';
+                const d2 = await fetchJSON(`https://api.coincap.io/v2/assets/${capId}/history?interval=${intv}&start=${start}&end=${now}`);
                 if (d2 && d2.data) {
                     return d2.data.map(p => ({ t: p.time, c: parseFloat(p.priceUsd) }));
                 }
@@ -1677,17 +1727,17 @@
         }
 
         async function manualRefresh() {
-            state.countdown = 60;
+            state.countdown = 30;
             await refreshPrices();
         }
 
         function startCountdown() {
-            state.countdown = 60;
+            state.countdown = 30;
             if (state.refreshInterval) clearInterval(state.refreshInterval);
             state.refreshInterval = setInterval(() => {
                 state.countdown--;
                 if (state.countdown <= 0) {
-                    state.countdown = 60;
+                    state.countdown = 30;
                     refreshPrices();
                 }
                 document.getElementById('refreshTimer').textContent = state.countdown + 's';
